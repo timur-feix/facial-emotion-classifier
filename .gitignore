@@ -205,3 +205,44 @@ cython_debug/
 marimo/_static/
 marimo/_lsp/
 __marimo__/
+
+# === Project-specific ignores ===
+
+# Dataset directories
+data/
+datasets/
+data_raw/
+data_processed/
+external/
+
+# FERPlus repo if cloned inside project
+external/FERPlus/
+
+# Large temporary files
+*.zip
+*.tar
+*.tar.gz
+
+# Model checkpoints / weights
+checkpoints/
+*.pth
+*.pt
+*.h5
+
+# Training outputs
+runs/
+logs/
+output/
+outputs/
+
+# Generated images and augmentation artifacts
+augmented/
+preprocessed/
+tmp/
+temp/
+
+# Jupyter notebook output dirs
+*/.ipynb_checkpoints/
+
+# VSCode workspace settings (optional)
+.vscode/
