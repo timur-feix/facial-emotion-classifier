@@ -10,6 +10,11 @@ python -m venv .venv
 .\.venv\Scripts\Activate.ps1
 ```
 
+Note: You may need to set this execution policy in order for PS to accept the activation:
+```powershell
+Set-ExecutionPolicy -Scope CurrentUser -ExecutionPolicy RemoteSigned
+```
+
 ### macOS / Linux
 ```bash
 python3 -m venv .venv
