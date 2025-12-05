@@ -8,4 +8,5 @@ kaggle.json
 *.tar
 *.tar.gz
 
+# VSCode settings
 .vscode/
