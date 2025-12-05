@@ -7,5 +7,3 @@ placeholder insert how to set up the environment
 
 ## 2. Downloading and preprocessing the data
 placeholder insert how to download and preprocess the data
-
-hallo saide
