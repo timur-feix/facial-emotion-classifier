@@ -37,11 +37,14 @@ You can also manually download the data if the script doesn't work for any reaso
 Go to [FER-2013 on Kaggle](https://www.kaggle.com/datasets/msambare/fer2013/) and download the `train` 
 and `test` directories. Inside the root directory, create a directory named `data` with two
 subdirs `raw` and `processed`. Then copy both the `test` and `train` directories into `raw`.
-```
-root/
+```text
+facial-emotion-classifier/
 ├─ data/
 │  ├─ raw/
-│  ├─ processed/
+│  │  ├─ train/
+│  │  └─ test/
+│  └─ processed/
+...
 ```
 
 ### 2.2 Preprocessing
