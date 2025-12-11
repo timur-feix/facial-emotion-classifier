@@ -10,3 +10,4 @@ kaggle.json
 
 # VSCode settings
 .vscode/
+.pyrightconfig.json

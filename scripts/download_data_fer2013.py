@@ -6,7 +6,7 @@ target_path = Path("./data/raw")
 preparation_processed_path = Path("./data/processed")
 
 # download data from kaggle and retrieve destination
-download_path = Path(kagglehub.dataset_download("msambare/fer2013"))
+download_path = Path(kagglehub.dataset_download("shahzadabbas/expression-in-the-wild-expw-dataset"))
 
 # copy the data into target path (./data/raw), also create (./data/processed)
 target_path.mkdir(parents=True, exist_ok=True)
