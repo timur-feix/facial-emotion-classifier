@@ -29,7 +29,7 @@ pip install -r requirements.txt
 
 ## 2. Downloading and preprocessing the data
 ### 2.1 Downloading
-Run `scripts/download_data.py` inside the root folder.
+Run `scripts\download_data.py` inside the root folder.
 It will download data into `data\balanced-raf-db` directory with subdirs `train`, `val`, and `test`.
 
 #### 2.1.1 Manual download
@@ -45,4 +45,5 @@ data/
 ```
 
 ### 2.2 Preprocessing
-placeholder insert preprocessing text
+Run `scripts\preprocessing_data.py`. It will flatten the structure of `train`, `test`, and `val` and 
+generate multiple label cvs files.
