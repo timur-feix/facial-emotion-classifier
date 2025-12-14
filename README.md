@@ -30,22 +30,10 @@ pip install -r requirements.txt
 ## 2. Downloading and preprocessing the data
 ### 2.1 Downloading
 Run `scripts/download_data_fer_2013.py` inside the root folder.
-It will create a `data` directory with subdirs `raw` and `processed` and download training and testing
-data into `raw`.
+It will create a `data` directory with subdirs `raw` and `processed` and download data into `raw`.
+
 #### 2.1.1 Manual download
-You can also manually download the data if the script doesn't work for any reason at all.
-Go to [FER-2013 on Kaggle](https://www.kaggle.com/datasets/msambare/fer2013/) and download the `train` 
-and `test` directories. Inside the root directory, create a directory named `data` with two
-subdirs `raw` and `processed`. Then copy both the `test` and `train` directories into `raw`.
-```text
-facial-emotion-classifier/
-├─ data/
-│  ├─ raw/
-│  │  ├─ train/
-│  │  └─ test/
-│  └─ processed/
-...
-```
+placeholder insert manual download text
 
 ### 2.2 Preprocessing
 placeholder insert preprocessing text
