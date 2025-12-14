@@ -44,25 +44,3 @@ def flatten_split(split_dir):
 # Run for each split
 for split in ["train", "val", "test"]:
     flatten_split(f"data/balanced-raf-db/{split}")
-
-
-
-# we converted the images to RGB
-def convert_images_to_rgb(split_dir):
-    split_dir = Path(split_dir)
-
-    for img_path in split_dir.iterdir():
-        if not img_path.is_file():
-            continue
-
-        with Image.open(img_path) as img:
-            rgb_img = img.convert("RGB")
-            rgb_img.save(img_path)
-
-    print(f"Converted images to RGB in {split_dir}")
-
-for split in ["train", "val", "test"]:
-    convert_images_to_rgb(f"data/balanced-raf-db/{split}")
-
-
-
