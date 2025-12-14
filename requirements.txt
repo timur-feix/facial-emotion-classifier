@@ -2,3 +2,5 @@ numpy
 torch
 kagglehub
 pillow
+matplotlib
+pandas
