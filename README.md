@@ -35,5 +35,14 @@ It will download data into `data\balanced-raf-db` directory with subdirs `train`
 #### 2.1.1 Manual download
 Should the download script fail, you can download the dataset on [Kaggle](https://www.kaggle.com/datasets/dollyprajapati182/balanced-raf-db-dataset-7575-grayscale). Move the downloaded directories into `data\balanced-raf-db`.
 
+Consult the following result structure as reference.
+```text
+data/
+└── balanced-raf-db/
+    ├── train/
+    ├── test/
+    └── val/
+```
+
 ### 2.2 Preprocessing
 placeholder insert preprocessing text
