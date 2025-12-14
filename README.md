@@ -29,11 +29,11 @@ pip install -r requirements.txt
 
 ## 2. Downloading and preprocessing the data
 ### 2.1 Downloading
-Run `scripts/download_data_fer_2013.py` inside the root folder.
-It will create a `data` directory with subdirs `raw` and `processed` and download data into `raw`.
+Run `scripts/download_data.py` inside the root folder.
+It will download data into `data\balanced-raf-db` directory with subdirs `train`, `val`, and `test`.
 
 #### 2.1.1 Manual download
-placeholder insert manual download text
+Should the download script fail, you can download the dataset on [Kaggle](https://www.kaggle.com/datasets/dollyprajapati182/balanced-raf-db-dataset-7575-grayscale). Move the downloaded directories into `data\balanced-raf-db`.
 
 ### 2.2 Preprocessing
 placeholder insert preprocessing text
