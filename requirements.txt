@@ -1,6 +1,7 @@
 numpy
 torch
+torchvision
 kagglehub
-pillow
+Pillow
 matplotlib
 pandas
