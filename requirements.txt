@@ -5,3 +5,4 @@ kagglehub
 Pillow
 matplotlib
 pandas
+tqdm
