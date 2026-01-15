@@ -3,7 +3,9 @@ import pandas as pd
 from pathlib import Path
 import matplotlib.pyplot as plt
 from PIL import Image
-
+import numpy as np
+import torch
+'''random show images
 # Paths
 split_dir = Path("data/balanced-raf-db/train")
 csv_path = split_dir / "labels.csv"
@@ -28,4 +30,4 @@ for i, (_, row) in enumerate(samples.iterrows()):
     plt.axis("off")
 
 plt.tight_layout()
-plt.show()
+plt.show()'''
