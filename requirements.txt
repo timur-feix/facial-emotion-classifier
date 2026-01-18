@@ -8,3 +8,4 @@ pandas
 tqdm
 pytorch-grad-cam
 opencv-python
+mediapipe

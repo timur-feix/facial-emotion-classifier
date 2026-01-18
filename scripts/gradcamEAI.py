@@ -35,20 +35,20 @@ def get_prediction(model, input_tensor):
 #def get_edge_detection(input_image):
 edges = cv2.Canny(image, 100, 200)
 
-plt.figure(figsize=(10,5))
-plt.subplot(1,2,1)
-plt.title('Original Image')
-plt.imshow(image.permute(1, 2, 0).cpu().numpy())
-plt.axis('off')
+def plot_gradcam_edge(image, edges):
+    plt.figure(figsize=(10,5))
+    plt.subplot(1,2,1)
+    plt.title('Original Image')
+    plt.imshow(image.permute(1, 2, 0).cpu().numpy())
+    plt.axis('off')
 
-plt.subplot(1,2,2)
-plt.title('Edge Detection')
-plt.imshow(edges, cmap='gray')
-plt.axis('off')
-plt.show()
-
-
-
+    plt.subplot(1,2,2)
+    plt.title('Edge Detection')
+    plt.imshow(edges, cmap='gray')
+    plt.axis('off')
+    plt.show()
+    
 def get_gradcam(model, target_layers):
     cam = GradCAM(model=res_model, target_layers=target_layers)
+    heatmap = cam(input_tensor=image.unsqueeze(0), targets=EMOTION_DICT, num_classes=num_classes)
     return cam
