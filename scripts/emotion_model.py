@@ -88,12 +88,11 @@ class ResNetEmotionModel(nn.Module):
         
         #saving the trained model
         torch.save(model.state_dict(), 'emotion_model.pt') 
-        return losses
-    
-    def validate_model(self):
+        
+        #plotting the loss curve
         plt.plot(losses)
         plt.xlabel('Step')
         plt.ylabel('Loss')
         plt.show()
-        
+
 print(f"the sum of parameters: {sum([_.numel() for _ in ResNetEmotionModel().parameters()])}")
