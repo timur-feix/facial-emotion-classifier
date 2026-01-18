@@ -6,8 +6,20 @@
 import torch
 import torch.nn as nn
 from torchvision.models import resnet18
+from torchvision import transforms
+from torch.utils.data import DataLoader, Dataset
 from tqdm import tqdm
+from PIL import Image
 import matplotlib.pyplot as plt
+
+EMOTION_DICT = {
+    0: 'angry',
+    1: 'disgust',
+    2: 'fear',
+    3: 'happy',
+    4: 'sad',
+    5: 'surprise',
+}
 
 class ResNetEmotionModel(nn.Module):
     def __init__(self, num_classes=6):
