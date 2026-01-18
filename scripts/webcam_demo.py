@@ -1,6 +1,6 @@
 # Author : Neslihan Bir
 # Purpose : real-time webcam demo 
-# Status : In Progress
+# Status : In Progress 
 import cv2
 import numpy as np
 import mediapipe as mp
