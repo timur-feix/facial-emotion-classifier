@@ -3,6 +3,7 @@ import shutil
 from pathlib import Path
 from PIL import Image
 
+# Removing 'neutral' class directories
 for dir in ["train", "val", "test"]:
     shutil.rmtree(f"data/balanced-raf-db/{dir}/neutral", ignore_errors=True)
 
@@ -15,8 +16,9 @@ def flatten_split(split_dir):
             continue
 
         label = label_dir.name
+        img_count = 0
 
-        for idx, img_path in enumerate(label_dir.iterdir()):
+        for idx, img_path in enumerate(sorted(label_dir.iterdir())):
             if not img_path.is_file():
                 continue
 
@@ -27,6 +29,7 @@ def flatten_split(split_dir):
             shutil.move(img_path, new_path)
 
             label_rows.append([new_name, label])
+            img_count += 1
 
         # Remove empty label directory
         label_dir.rmdir()
@@ -36,7 +39,7 @@ def flatten_split(split_dir):
     with open(csv_path, "w", newline="") as f:
         writer = csv.writer(f)
         writer.writerow(["filename", "label"])
-        writer.writerows(label_rows)
+        writer.writerows(sorted(label_rows)) #sort for consistency
 
     print(f"Processed {split_dir}, saved {csv_path}")
 
