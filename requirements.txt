@@ -2,7 +2,9 @@ numpy
 torch
 torchvision
 kagglehub
-Pillow
+pillow
 matplotlib
 pandas
 tqdm
+pytorch-grad-cam
+opencv-python
