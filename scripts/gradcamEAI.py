@@ -1,7 +1,7 @@
-# Author : Mays Zuabi
-# Branch : mays/mayss_contribution
+# Author : Neslihan Bir 
+# Branch : neslis_contribuition
 # Purpose: Explainable AI using Grad-CAM for emotion recognition models
-# Status : In Progress
+# Status : In Progress (Mays + Neslihan)
 
 # Using for now an already existing implementation of Grad-CAM, since this is allowed, to focus more on training the model on our dataset and adapting
 
