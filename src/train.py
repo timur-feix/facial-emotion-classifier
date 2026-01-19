@@ -1,115 +1,138 @@
-# src/train.py
+import dataset
+from torch.utils.data import DataLoader
 
-import os
-from pathlib import Path
+import utilities
 
+from model import FacialEmotionRecognitionCNN as FERCNN
+
+from sys import argv
 import torch
-import torch.nn as nn
 
-from dataset import BalancedRafDbDataset
-from data_loader import DataLoader
-from model import TinyCNN
-
-
-def accuracy(logits: torch.Tensor, y: torch.Tensor) -> float:
-    preds = logits.argmax(dim=1)
-    return (preds == y).float().mean().item()
-
-
-def train_one_epoch(model, loader, optimizer, device):
-    model.train()
-    criterion = nn.CrossEntropyLoss()
-
-    total_loss = 0.0
-    total_acc = 0.0
-    total_seen = 0
-
-    for x, y in loader:
-        x = x.to(device)
-        y = y.to(device)
-
-        optimizer.zero_grad()
-        logits = model(x)
-        loss = criterion(logits, y)
-        loss.backward()
-        optimizer.step()
-
-        bs = x.size(0)
-        total_loss += loss.item() * bs
-        total_acc += accuracy(logits, y) * bs
-        total_seen += bs
-
-    return total_loss / total_seen, total_acc / total_seen
-
-
-@torch.no_grad()
-def evaluate(model, loader, device):
-    model.eval()
-    criterion = nn.CrossEntropyLoss()
-
-    total_loss = 0.0
-    total_acc = 0.0
-    total_seen = 0
-
-    for x, y in loader:
-        x = x.to(device)
-        y = y.to(device)
-
-        logits = model(x)
-        loss = criterion(logits, y)
-
-        bs = x.size(0)
-        total_loss += loss.item() * bs
-        total_acc += accuracy(logits, y) * bs
-        total_seen += bs
-
-    return total_loss / total_seen, total_acc / total_seen
-
+using_debug = "--debug" in argv
 
 def main():
+    # timing supervisors
+    optimizer_timing_supervisor = [0.0, 0.0]
+    backwards_timing_supervisor = [0.0, 0.0]
+
+    # device
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-    print("Using device:", device)
+    if using_debug: print(f"Using device: {device}")
 
-    root = "data/balanced-raf-db"
-    train_ds = BalancedRafDbDataset(f"{root}/train")
-    val_ds = BalancedRafDbDataset(f"{root}/val")
-    test_ds = BalancedRafDbDataset(f"{root}/test")
+    model = FERCNN().to(device)
 
-    train_loader = DataLoader(train_ds, batch_size=128, shuffle_=True)
-    val_loader = DataLoader(val_ds, batch_size=256, shuffle_=False)
-    test_loader = DataLoader(test_ds, batch_size=256, shuffle_=False)
+    # loss
+    criterion = torch.nn.CrossEntropyLoss()
 
-    model = TinyCNN(num_classes=6).to(device)
+    #optimizer
+    optimizer = torch.optim.AdamW(
+        model.parameters(),
+        lr=1e-3,
+        weight_decay=1e-4
+    )
 
-    optimizer = torch.optim.Adam(model.parameters(), lr=1e-3)
+    if using_debug: print(f"Using optim: {optimizer}")
 
-    x0, y0 = next(iter(train_loader))
-    out0 = model(x0.to(device))
+    # maybe later: LR schedule depending on whether we want SGD
+    # TODO
 
-    epochs = 10
-    best_val_acc = -1.0
 
-    Path("artifacts").mkdir(exist_ok=True)
+    # datasets
+    train_ds = dataset.RAFDataset("./data/balanced-raf-db/train")
+    train_ld = DataLoader(train_ds,
+                        batch_size=16,
+                        shuffle=True,
+                        pin_memory=(device.type == "cuda"),
+                        num_workers=0,
+                        persistent_workers=False,
+                        drop_last=True)
 
-    for epoch in range(1, epochs + 1):
-        tr_loss, tr_acc = train_one_epoch(model, train_loader, optimizer, device)
-        va_loss, va_acc = evaluate(model, val_loader, device)
+    valid_ds = dataset.RAFDataset("./data/balanced-raf-db/val")
+    valid_ld = DataLoader(valid_ds,
+                        batch_size=16,
+                        shuffle=False,
+                        pin_memory=(device.type == "cuda"),
+                        num_workers=0,
+                        persistent_workers=False,
+                        drop_last=False)
 
-        print(
-            f"Epoch {epoch:02d} | "
-            f"train loss {tr_loss:.4f} acc {tr_acc:.3f} | "
-            f"val loss {va_loss:.4f} acc {va_acc:.3f}"
-        )
+    # epoch loop
+    def do_epoch(mode):
+        if mode == "train":
+            context_manager = utilities.NullContext()
+            model.train()
+            data_loader = train_ld
+        else: 
+            if mode == "valid":
+                context_manager = torch.no_grad()
+                model.eval()
+                data_loader = valid_ld
+            else: return 0, 0
+        
+        loss_sum, correct, total = 0, 0, 0
+        with context_manager:
+            for x, y in data_loader:
+                x, y = x.to(device, non_blocking=True), y.to(device, non_blocking=True)
+                logits = model(x)
+                loss = criterion(logits, y)
 
-        if va_acc > best_val_acc:
-            best_val_acc = va_acc
-            torch.save(model.state_dict(), "artifacts/tinycnn_best.pth")
+                if mode == "train":
+                    optimizer.zero_grad()
+                    with utilities.Timer("loss backward", show=False) as bwt:
+                        loss.backward()
+                    backwards_timing_supervisor[0] += bwt.timer
+                    backwards_timing_supervisor[1] += 1
 
-    print("Best val acc:", best_val_acc)
+                    with utilities.Timer("optimizer step", show=False) as opt:
+                        optimizer.step()
+                    optimizer_timing_supervisor[0] += opt.timer
+                    optimizer_timing_supervisor[1] += 1
+                    
 
-    model.load_state_dict(torch.load("artifacts/tinycnn_best.pth", map_location=device))
-    te_loss, te_acc = evaluate(model, test_loader, device)
-    print(f"TEST | loss {te_loss:.4f} acc {te_acc:.3f}")
+                bs = x.size(0)
+                loss_sum += loss.item() * bs
+                predicitions = logits.argmax(dim=1)
+
+                correct += (predicitions == y).sum().item()
+                total += bs
+            
+        loss = loss_sum / total
+        accuracy = correct / total
+
+        return accuracy, loss
+
+        
+    epochs = 3
+    for epoch in range(epochs):
+        model.reset_timing_supervisor()
+        train_ds.reset_timing_supervisor()
+
+        optimizer_timing_supervisor = [0.0, 0.0]
+        backwards_timing_supervisor = [0.0, 0.0]
+
+        with utilities.Timer("epoch total"):
+            train_acc, train_loss = do_epoch("train")
+            valid_acc, valid_loss = do_epoch("valid")
+
+        print(f"Epoch:{epoch+1}/{epochs}",
+            f"Train: Accuracy {train_acc:.3f}; Loss {train_loss:.3f}",
+            f"Valid: Accuracy {valid_acc:.3f}; Loss {valid_loss:.3f}")
+        
+        print("\n")
+        print(f"average model forward time: {model.timing_supervisor[0] / model.timing_supervisor[1]}s")
+        print(f"total model forward time: {model.timing_supervisor[0]}s")
+
+        print("\n")
+        print(f"average train __getitem__ time: {train_ds.timing_supervisor[0] / train_ds.timing_supervisor[1]}s")
+        print(f"total train __getitem__ time: {train_ds.timing_supervisor[0]}s")
+
+        print("\n")
+        print(f"average optimizer time: {optimizer_timing_supervisor[0] / optimizer_timing_supervisor[1]}s")
+        print(f"total optimizer time: {optimizer_timing_supervisor[0]}s")
+
+        print("\n")
+        print(f"average loss backward time: {backwards_timing_supervisor[0] / backwards_timing_supervisor[1]}s")
+        print(f"total loss backward time: {backwards_timing_supervisor[0]}s")
 
 
 if __name__ == "__main__":

@@ -4,3 +4,4 @@ kagglehub
 pillow
 matplotlib
 pandas
+torchvision

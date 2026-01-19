@@ -5,11 +5,15 @@ import numpy as np
 import torch
 from PIL import Image
 
+from torch.utils.data import Dataset
+
+import utilities
+
 
 INDEX_MAP = {"angry":0, "disgust":1, "fear":2, "happy":3, "sad":4, "surprise":5}
 
 
-class BalancedRafDbDataset:
+class RAFDataset(Dataset):
     def __init__(self, relative_pathname):
         self.relative_pathname = Path(relative_pathname)
         self.labels = read_csv(self.relative_pathname / "labels.csv")
@@ -23,22 +27,30 @@ class BalancedRafDbDataset:
             self.samples.append(
                 (self.relative_pathname / row["filename"], self.index_map[label])
             )
+        
+        self.timing_supervisor = [0.0, 0.0]
     
+    def reset_timing_supervisor(self):
+        self.timing_supervisor = [0.0, 0.0]
+
     def __getitem__(self, idx):
-        path, y = self.samples[idx]
-        PIL_image = Image.open(path)
-        PIL_image = PIL_image.resize((64, 64), resample=Image.Resampling.BILINEAR)
-                                     
+        with utilities.Timer("full __getitem__", show=False) as t:
+            # implements getitem where each image is converted into a 64x64 "grey" RGB image
+            path, y = self.samples[idx]
+            with Image.open(path) as img:
+                img = img.convert("L").convert("RGB")
+                img = img.resize((64, 64), resample=Image.Resampling.BILINEAR)
+  
+            arr = np.asarray(img, dtype=np.float32) / 255.0
+            arr = np.transpose(arr, (2, 0, 1))
 
-        arr = np.array(PIL_image, dtype=np.float32) / 255.0
-        arr = arr[None, :, :]
-        arr = np.repeat(arr, 3, axis=0)
+            x = torch.from_numpy(arr)
+            x = (x - 0.5) / 0.5
+            y = torch.tensor(y, dtype=torch.long)
 
-        x = torch.from_numpy(arr)
-        y = torch.tensor(y, dtype=torch.long)
-
+        self.timing_supervisor[0] += t.timer
+        self.timing_supervisor[1] += 1
         return x, y
     
     def __len__(self):
         return len(self.samples)
-    

@@ -2,6 +2,7 @@
 data/
 .venv/
 kaggle.json
+__pycache__/
 
 # Large files
 *.zip
