@@ -1,4 +1,4 @@
-import torch, torch.nn as nn, utilities
+'''import torch, torch.nn as nn, utilities
 
 class ApplicationStack(nn.Module):
     # stack of Conv -> BN -> ReLU because conv1(...), bn1(...), etc. feels clumsy
@@ -62,4 +62,23 @@ class FacialEmotionRecognitionCNN(nn.Module):
         
         self.timing_supervisor[0] += t.timer
         self.timing_supervisor[1] += 1
-        return x
+        return x '''''
+
+import torch
+import torch.nn as nn
+from torchvision import models
+
+class ResNet18(nn.Module):
+    def __init__(self, num_classes=6):
+        super().__init__()
+        self.model = models.resnet18(weights=None)
+        self.model.fc = nn.Linear(self.model.fc.in_features, num_classes)
+
+        # eski training loop buna bakıyor
+        self.timing_supervisor = [0.0, 0]
+
+    def forward(self, x):
+        return self.model(x)
+
+    def reset_timing_supervisor(self):
+        self.timing_supervisor = [0.0, 0]

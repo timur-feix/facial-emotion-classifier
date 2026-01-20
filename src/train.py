@@ -3,7 +3,8 @@ from torch.utils.data import DataLoader
 
 import utilities
 
-from model import FacialEmotionRecognitionCNN as FERCNN
+from model import ResNet18
+#from model import FacialEmotionRecognitionCNN as FERCNN
 
 from sys import argv
 import torch
@@ -19,7 +20,8 @@ def main():
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     if using_debug: print(f"Using device: {device}")
 
-    model = FERCNN().to(device)
+    model = ResNet18(num_classes=6).to(device)
+    #model = FERCNN().to(device)
 
     # loss
     criterion = torch.nn.CrossEntropyLoss()

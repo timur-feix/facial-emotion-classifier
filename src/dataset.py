@@ -16,7 +16,7 @@ INDEX_MAP = {"angry":0, "disgust":1, "fear":2, "happy":3, "sad":4, "surprise":5}
 class RAFDataset(Dataset):
     def __init__(self, relative_pathname):
         self.relative_pathname = Path(relative_pathname)
-        self.labels = read_csv(self.relative_pathname / "labels.csv")
+        self.labels = read_csv(self.relative_pathname/ "labels.csv")
 
         self.index_map = INDEX_MAP
         self.class_map = {v: k for k, v in self.index_map.items()}
