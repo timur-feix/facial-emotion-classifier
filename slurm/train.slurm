@@ -6,7 +6,22 @@
 #SBATCH --output=%x_%j.out
 #SBATCH --error=%x_%j.err
 
-set -e
+set -euo pipefail
+
+REPO_DIR="$HOME/facial-emotion-classifier"
+BRANCH="custom-model-gpu-access"
+
+cd "$REPO_DIR"
+
+echo "=== Git update ==="
+git fetch origin
+git checkout "$BRANCH"
+git pull --ff-only origin "$BRANCH"
+
+echo "Running commit:"
+git rev-parse HEAD
+echo "=================="
+
 cd "$SLURM_SUBMIT_DIR"
 
 mkdir -p logs checkpoints
