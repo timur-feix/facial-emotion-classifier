@@ -1,7 +1,7 @@
 #!/bin/bash
 #SBATCH --job-name=fer
-#SBATCH --partition=gobi
-#SBATCH --gres=gpu:1
+#SBATCH --partition=NvidiaAll
+#SBATCH --gpus=1
 #SBATCH --time=04:00:00
 #SBATCH --mem=16G
 #SBATCH --cpus-per-task=4
@@ -21,5 +21,7 @@ if torch.cuda.is_available():
     print("GPU:", torch.cuda.get_device_name(0))
     print("CUDA version:", torch.version.cuda)
 EOF
+
+nvidia-smi
 
 python src/train.py --epochs 3 --batch-size 64 --num-workers 4 --lr 1e-3 --outdir checkpoints
