@@ -1,7 +1,6 @@
 #!/bin/bash
 #SBATCH --job-name=fer
 #SBATCH --partition=NvidiaAll
-#SBATCH --gpus=1
 #SBATCH --time=04:00:00
 #SBATCH --mem=16G
 #SBATCH --cpus-per-task=4
