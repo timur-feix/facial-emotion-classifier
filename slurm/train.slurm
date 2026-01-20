@@ -3,8 +3,8 @@
 #SBATCH --partition=NvidiaAll
 #SBATCH --time=04:00:00
 #SBATCH --cpus-per-task=4
-#SBATCH --output=logs/%x_%j.out
-#SBATCH --error=logs/%x_%j.err
+#SBATCH --output=%x_%j.out
+#SBATCH --error=%x_%j.err
 
 set -e
 cd "$SLURM_SUBMIT_DIR"
