@@ -1,25 +1,67 @@
-import dataset
-from torch.utils.data import DataLoader
-
-import utilities
+import dataset, utilities, torch, os, argparse, json, socket
 
 from model import FacialEmotionRecognitionCNN as FERCNN
+from torch.utils.data import DataLoader
 
-from sys import argv
-import torch
+from pathlib import Path
 
-using_debug = "--debug" in argv
+using_debug = True
+
+def parse_args():
+    p = argparse.ArgumentParser()
+    p.add_argument("--data-dir", type=str, default=None)
+    p.add_argument("--outdir", type=str, default="checkpoints")
+    p.add_argument("--epochs", type=int, default=30)
+    p.add_argument("--batch-size", type=int, default=64)
+    p.add_argument("--lr", type=float, default=1e-3)
+    p.add_argument("--num-workers", type=int, default=4)
+    p.add_argument("--resume", type=str, default=None)
+    return p.parse_args()
+
+def save_ckpt(path, epoch, model, optimizer, best_valid_acc):
+    torch.save({
+        "epoch": epoch,
+        "model": model.state_dict(),
+        "optimizer": optimizer.state_dict(),
+        "best_valid_acc": best_valid_acc,
+    }, path)
+
+def load_ckpt(path, model, optimizer):
+    ckpt = torch.load(path, map_location="cpu")
+    model.load_state_dict(ckpt["model"])
+    if optimizer is not None and "optimizer" in ckpt:
+        optimizer.load_state_dict(ckpt["optimizer"])
+    return ckpt.get("epoch", 0), ckpt.get("best_valid_acc", 0.0)
 
 def main():
-    # timing supervisors
-    optimizer_timing_supervisor = [0.0, 0.0]
-    backwards_timing_supervisor = [0.0, 0.0]
+    args = parse_args()
+
+    root = Path(__file__).resolve().parents[1]
+    default_data = root / "data" / "balanced-raf-db"
+
+    data_dir = Path(args.data_dir) if args.data_dir else default_data
+
+    outdir = (root / args.outdir) if not Path(args.outdir).is_absolute() else Path(args.outdir)
+    outdir.mkdir(parents=True, exist_ok=True)
+    (outdir / "config.json").write_text(json.dumps(vars(args), indent=2))
+
+    batch_size = args.batch_size
+    epochs = args.epochs
+    lr = args.lr
+    num_workers = args.num_workers
+    
 
     # device
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-    if using_debug: print(f"Using device: {device}")
+    print(f"Using device: {device}", flush=True)
+    if device.type == "cuda":
+        print("GPU:", torch.cuda.get_device_name(0), flush=True)
+        print("CUDA:", torch.version.cuda, flush=True)
 
     model = FERCNN().to(device)
+
+    pin_memory = (device.type == "cuda")
+    persistent_workers = (num_workers > 0)
 
     # loss
     criterion = torch.nn.CrossEntropyLoss()
@@ -27,34 +69,39 @@ def main():
     #optimizer
     optimizer = torch.optim.AdamW(
         model.parameters(),
-        lr=1e-3,
+        lr=lr,
         weight_decay=1e-4
     )
 
-    if using_debug: print(f"Using optim: {optimizer}")
+    if using_debug: print(f"Using optim: {optimizer}", flush=True)
 
     # maybe later: LR schedule depending on whether we want SGD
     # TODO
 
+    best_valid_acc = 0.0
+    start_epoch = 0
+    if args.resume:
+        resume_path = Path(args.resume)
+        if not resume_path.is_absolute():
+            resume_path = root / resume_path
+        start_epoch, best_valid_acc = load_ckpt(resume_path, model, optimizer)
 
     # datasets
-    train_ds = dataset.RAFDataset("./data/balanced-raf-db/train")
-    train_ld = DataLoader(train_ds,
-                        batch_size=16,
-                        shuffle=True,
-                        pin_memory=(device.type == "cuda"),
-                        num_workers=0,
-                        persistent_workers=False,
-                        drop_last=True)
+    dl_common = dict(
+        batch_size=batch_size,
+        pin_memory=pin_memory,
+        num_workers=num_workers,
+        persistent_workers=persistent_workers,
+    )
 
-    valid_ds = dataset.RAFDataset("./data/balanced-raf-db/val")
-    valid_ld = DataLoader(valid_ds,
-                        batch_size=16,
-                        shuffle=False,
-                        pin_memory=(device.type == "cuda"),
-                        num_workers=0,
-                        persistent_workers=False,
-                        drop_last=False)
+    train_ds = dataset.RAFDataset(str(data_dir / "train"))
+    valid_ds = dataset.RAFDataset(str(data_dir / "val"))
+
+    if num_workers > 0:
+        dl_common["prefetch_factor"] = 2
+
+    train_ld = DataLoader(train_ds, shuffle=True, drop_last=True, **dl_common)
+    valid_ld = DataLoader(valid_ds, shuffle=False, drop_last=False, **dl_common)
 
     # epoch loop
     def do_epoch(mode):
@@ -72,28 +119,21 @@ def main():
         loss_sum, correct, total = 0, 0, 0
         with context_manager:
             for x, y in data_loader:
-                x, y = x.to(device, non_blocking=True), y.to(device, non_blocking=True)
+                x, y = x.to(device, non_blocking=pin_memory), y.to(device, non_blocking=pin_memory)
                 logits = model(x)
                 loss = criterion(logits, y)
 
                 if mode == "train":
                     optimizer.zero_grad()
-                    with utilities.Timer("loss backward", show=False) as bwt:
-                        loss.backward()
-                    backwards_timing_supervisor[0] += bwt.timer
-                    backwards_timing_supervisor[1] += 1
+                    loss.backward()
 
-                    with utilities.Timer("optimizer step", show=False) as opt:
-                        optimizer.step()
-                    optimizer_timing_supervisor[0] += opt.timer
-                    optimizer_timing_supervisor[1] += 1
+                    optimizer.step()
                     
-
                 bs = x.size(0)
                 loss_sum += loss.item() * bs
-                predicitions = logits.argmax(dim=1)
+                predictions = logits.argmax(dim=1)
 
-                correct += (predicitions == y).sum().item()
+                correct += (predictions == y).sum().item()
                 total += bs
             
         loss = loss_sum / total
@@ -101,38 +141,23 @@ def main():
 
         return accuracy, loss
 
-        
-    epochs = 3
-    for epoch in range(epochs):
-        model.reset_timing_supervisor()
-        train_ds.reset_timing_supervisor()
+    print(f"Host: {socket.gethostname()}", flush=True)
+    print(f"SLURM_JOB_ID: {os.environ.get('SLURM_JOB_ID')}", flush=True)
 
-        optimizer_timing_supervisor = [0.0, 0.0]
-        backwards_timing_supervisor = [0.0, 0.0]
-
-        with utilities.Timer("epoch total"):
-            train_acc, train_loss = do_epoch("train")
-            valid_acc, valid_loss = do_epoch("valid")
+    for epoch in range(start_epoch, epochs):
+        train_acc, train_loss = do_epoch("train")
+        valid_acc, valid_loss = do_epoch("valid")
 
         print(f"Epoch:{epoch+1}/{epochs}",
             f"Train: Accuracy {train_acc:.3f}; Loss {train_loss:.3f}",
-            f"Valid: Accuracy {valid_acc:.3f}; Loss {valid_loss:.3f}")
+            f"Valid: Accuracy {valid_acc:.3f}; Loss {valid_loss:.3f}", flush=True)
         
-        print("\n")
-        print(f"average model forward time: {model.timing_supervisor[0] / model.timing_supervisor[1]}s")
-        print(f"total model forward time: {model.timing_supervisor[0]}s")
+        save_ckpt(outdir / "last.pt", epoch + 1, model, optimizer, best_valid_acc)
+        if valid_acc > best_valid_acc:
+            best_valid_acc = valid_acc
+            save_ckpt(outdir / "best.pt", epoch + 1, model, optimizer, best_valid_acc)
+    
 
-        print("\n")
-        print(f"average train __getitem__ time: {train_ds.timing_supervisor[0] / train_ds.timing_supervisor[1]}s")
-        print(f"total train __getitem__ time: {train_ds.timing_supervisor[0]}s")
-
-        print("\n")
-        print(f"average optimizer time: {optimizer_timing_supervisor[0] / optimizer_timing_supervisor[1]}s")
-        print(f"total optimizer time: {optimizer_timing_supervisor[0]}s")
-
-        print("\n")
-        print(f"average loss backward time: {backwards_timing_supervisor[0] / backwards_timing_supervisor[1]}s")
-        print(f"total loss backward time: {backwards_timing_supervisor[0]}s")
 
 
 if __name__ == "__main__":
