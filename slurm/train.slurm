@@ -2,7 +2,6 @@
 #SBATCH --job-name=fer
 #SBATCH --partition=NvidiaAll
 #SBATCH --time=04:00:00
-#SBATCH --mem=4G
 #SBATCH --cpus-per-task=4
 #SBATCH --output=logs/%x_%j.out
 #SBATCH --error=logs/%x_%j.err
