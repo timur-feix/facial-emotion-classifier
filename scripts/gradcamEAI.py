@@ -34,48 +34,53 @@ def load_model(weights_path='emotion_model.pt'):
 
 # Load the test images
 def load_test_data(index = 0):
-    test_path = Path("data/balanced-raf-rb/test")  # path to test dataset
+    test_path = Path("data/balanced-raf-db/test")
     csv_path = test_path / "labels.csv"
 
     df = pd.read_csv(csv_path)
-
     row = df.iloc[index]
+
     image_path = test_path / row["filename"]
     label = EMOTION_DICT.index(row["label"])
     image_pil = Image.open(image_path).convert('L')  # convert to grayscale
-    transform = transforms.ToTensor()
+    
+    transform = transforms.Compose([
+        transforms.Resize((64, 64)),
+        transforms.ToTensor(),
+        transforms.Normalize(mean=[0.5], std=[0.5])
+    ])
     image_tensor = transform(image_pil).unsqueeze(0)  # add batch dimension
     return image_pil, image_tensor, label
     
 
 #prediction pass
-def get_prediction(res_model, image, device):
-    image = image.to(device)
+def get_prediction(res_model, image_tensor, device):
+    image_tensor = image_tensor.to(device)
 
     with torch.no_grad():
-        output = res_model(image)
+        output = res_model(image_tensor)
         predicted = torch.argmax(output, 1).item()
-        emotion_name = EMOTION_DICT[predicted]
-    print(f'Predicted Emotion: {emotion_name}')
+    print(f'Predicted Emotion: {EMOTION_DICT[predicted]}')
     return predicted 
      
 # Grad-CAM setup:actual usage of the existing gradcam
-def compute_gradcam(res_model, image_tensor, predicted):
+def compute_gradcam(res_model, image_tensor, class_index):
     target_layers = [res_model.model.layer4[-1]] # target layer in the model bzw. last conv layer
     
     cam = GradCAM(model=res_model,
                   target_layers=target_layers)
-    targets = [ClassifierOutputTarget(targeted=target_class)]
+    targets = [ClassifierOutputTarget(class_index)]
     grayscale_cam = cam(input_tensor=image_tensor,
                          targets=targets)
     
     return grayscale_cam[0]
 
-def visualize_results(image, cam):
+def visualize_results(image_pil, cam):
     #overlay gradcam on image
     # Convert tensor to numpy array for visualization
     img_np = np.array(image_pil).astype(np.float32) / 255.0
-    img_np = np.stack([img_np.squeeze()] * 3, axis=-1)  # Convert to 3 channels RGB
+    if img_np.ndim == 2:
+        img_np = np.stack([img_np] * 3, axis=-1)  # Convert to RGB if grayscale
     # Overlay Grad-CAM on the image
     cam_image = show_cam_on_image(img_np, cam, use_rgb=True)
 
@@ -83,7 +88,7 @@ def visualize_results(image, cam):
 
     plt.subplot(1,2,1)
     plt.title('Original Image')
-    plt.imshow(image.permute(1, 2, 0).cpu().numpy())
+    plt.imshow(img_np)
     plt.axis('off')
 
     plt.subplot(1,2,2)
@@ -96,7 +101,7 @@ def visualize_results(image, cam):
 
 if __name__ == "__main__":
     res_model, device = load_model()
-    image_pil, image_tensor = load_test_data()
+    image_pil, image_tensor, label = load_test_data()
     predicted = get_prediction(res_model, image_tensor, device)
     cam = compute_gradcam(res_model, image_tensor.to(device), predicted)
     visualize_results(image_pil, cam)
