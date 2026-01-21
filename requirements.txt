@@ -6,6 +6,6 @@ pillow
 matplotlib
 pandas
 tqdm
-pytorch-grad-cam
 opencv-python
 mediapipe
+git+https://github.com/jacobgil/pytorch-grad-cam.git
