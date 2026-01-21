@@ -1,7 +1,8 @@
 # Author : Mays Zuabi
 # Branch : mays/mayss_contribution
 # Purpose: Explainable AI using Grad-CAM for emotion recognition models
-# Status : In Progress
+# Status : Code Completed - script visualizes Grad-CAM results on test images
+# Note : still needs integration with the trained model weights and combining with demos
 
 # Using for now an already existing implementation of Grad-CAM, since this is allowed, to focus more on training the model on our dataset and adapting
 
@@ -26,11 +27,13 @@ def load_model(weights_path='emotion_model.pt'):
     
     res_model = ResNetEmotionModel(num_classes=len(EMOTION_DICT)) 
     res_model.load_state_dict(torch.load(weights_path,
-                                          map_location=torch.device('cpu')))
+                                          map_location=device))
     res_model.to(device)
     res_model.eval()
 
     return res_model, device
+
+EMOTION_TO_IDX = {v: k for k, v in EMOTION_DICT.items()}
 
 # Load the test images
 def load_test_data(index = 0):
@@ -41,7 +44,8 @@ def load_test_data(index = 0):
     row = df.iloc[index]
 
     image_path = test_path / row["filename"]
-    label = EMOTION_DICT.index(row["label"])
+    true_label = EMOTION_TO_IDX[row["label"]]
+    
     image_pil = Image.open(image_path).convert('L')  # convert to grayscale
     
     transform = transforms.Compose([
@@ -50,7 +54,7 @@ def load_test_data(index = 0):
         transforms.Normalize(mean=[0.5], std=[0.5])
     ])
     image_tensor = transform(image_pil).unsqueeze(0)  # add batch dimension
-    return image_pil, image_tensor, label
+    return image_pil, image_tensor, true_label
     
 
 #prediction pass
@@ -60,11 +64,13 @@ def get_prediction(res_model, image_tensor, device):
     with torch.no_grad():
         output = res_model(image_tensor)
         predicted = torch.argmax(output, 1).item()
-    print(f'Predicted Emotion: {EMOTION_DICT[predicted]}')
+
     return predicted 
      
 # Grad-CAM setup:actual usage of the existing gradcam
-def compute_gradcam(res_model, image_tensor, class_index):
+def compute_gradcam(res_model, image_tensor, class_index, device):
+    # ensuring the tensor is on the correct device
+    image_tensor = image_tensor.to(device)
     target_layers = [res_model.model.layer4[-1]] # target layer in the model bzw. last conv layer
     
     cam = GradCAM(model=res_model,
@@ -75,7 +81,7 @@ def compute_gradcam(res_model, image_tensor, class_index):
     
     return grayscale_cam[0]
 
-def visualize_results(image_pil, cam):
+def visualize_results(image_pil, cam, true_label, predicted):
     #overlay gradcam on image
     # Convert tensor to numpy array for visualization
     img_np = np.array(image_pil).astype(np.float32) / 255.0
@@ -86,14 +92,19 @@ def visualize_results(image_pil, cam):
 
     plt.figure(figsize=(10,5))
 
-    plt.subplot(1,2,1)
-    plt.title('Original Image')
+    plt.subplot(1,3,1)
+    plt.title(f'Original Image - True: {EMOTION_DICT[true_label]}')
     plt.imshow(img_np)
     plt.axis('off')
 
-    plt.subplot(1,2,2)
-    plt.title('Grad-CAM')
+    plt.subplot(1,3,2)
+    plt.title(f'Grad-CAM - Predicted: {EMOTION_DICT[predicted]}')
     plt.imshow(cam_image)
+    plt.axis('off')
+
+    plt.subplot(1, 3, 3)
+    plt.title('Heatmap Only')
+    plt.imshow(cam, cmap='jet')
     plt.axis('off')
 
     plt.tight_layout()
@@ -101,7 +112,7 @@ def visualize_results(image_pil, cam):
 
 if __name__ == "__main__":
     res_model, device = load_model()
-    image_pil, image_tensor, label = load_test_data()
+    image_pil, image_tensor, true_label = load_test_data()
     predicted = get_prediction(res_model, image_tensor, device)
-    cam = compute_gradcam(res_model, image_tensor.to(device), predicted)
-    visualize_results(image_pil, cam)
+    cam = compute_gradcam(res_model, image_tensor, predicted, device)
+    visualize_results(image_pil, cam, true_label, predicted)
