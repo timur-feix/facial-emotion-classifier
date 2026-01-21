@@ -3,8 +3,9 @@ from torch.utils.data import DataLoader
 
 import utilities
 
-from model import ResNet18
+
 #from model import FacialEmotionRecognitionCNN as FERCNN
+from resnet18_model import LightResNet18 as FERCNN
 
 from sys import argv
 import torch
@@ -20,8 +21,8 @@ def main():
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     if using_debug: print(f"Using device: {device}")
 
-    model = ResNet18(num_classes=6).to(device)
-    #model = FERCNN().to(device)
+    
+    model = FERCNN().to(device)
 
     # loss
     criterion = torch.nn.CrossEntropyLoss()
@@ -106,7 +107,7 @@ def main():
         
     epochs = 3
     for epoch in range(epochs):
-        model.reset_timing_supervisor()
+       # model.reset_timing_supervisor()
         train_ds.reset_timing_supervisor()
 
         optimizer_timing_supervisor = [0.0, 0.0]
@@ -120,9 +121,9 @@ def main():
             f"Train: Accuracy {train_acc:.3f}; Loss {train_loss:.3f}",
             f"Valid: Accuracy {valid_acc:.3f}; Loss {valid_loss:.3f}")
         
-        print("\n")
+        '''print("\n")
         print(f"average model forward time: {model.timing_supervisor[0] / model.timing_supervisor[1]}s")
-        print(f"total model forward time: {model.timing_supervisor[0]}s")
+        print(f"total model forward time: {model.timing_supervisor[0]}s")'''
 
         print("\n")
         print(f"average train __getitem__ time: {train_ds.timing_supervisor[0] / train_ds.timing_supervisor[1]}s")
