@@ -82,6 +82,7 @@ class LightResNet18(nn.Module):
 
         # Head
         self.pool = nn.AdaptiveAvgPool2d((1, 1))
+        self.dropout = nn.Dropout(p=0.5)
         self.fc = nn.Linear(w4, num_classes)
 
     def _make_layer(self, in_c, out_c, num_blocks, stride):
@@ -98,11 +99,7 @@ class LightResNet18(nn.Module):
         x = self.layer4(x)
         x = self.pool(x)
         x = x.flatten(1)
+        x = self.dropout(x) 
         return self.fc(x)
 
 
-if __name__ == "__main__":
-    model = LightResNet18(num_classes=6)
-    x = torch.randn(4, 3, 64, 64)
-    y = model(x)
-    print(y.shape) 
