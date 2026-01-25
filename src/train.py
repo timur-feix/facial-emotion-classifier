@@ -11,7 +11,7 @@ def parse_args():
     p = argparse.ArgumentParser()
     p.add_argument("--data-dir", type=str, default=None)
     p.add_argument("--outdir", type=str, default="checkpoints")
-    p.add_argument("--epochs", type=int, default=30)
+    p.add_argument("--epochs", type=int, default=10)
     p.add_argument("--batch-size", type=int, default=64)
     p.add_argument("--lr", type=float, default=1e-3)
     p.add_argument("--num-workers", type=int, default=4)
@@ -75,7 +75,7 @@ def main():
 
     if using_debug: print(f"Using optim: {optimizer}", flush=True)
 
-    # maybe later: LR schedule depending on whether we want SGD
+    # maybe later: LR schedule
     # TODO
 
     best_valid_acc = 0.0
@@ -144,18 +144,19 @@ def main():
     print(f"Host: {socket.gethostname()}", flush=True)
     print(f"SLURM_JOB_ID: {os.environ.get('SLURM_JOB_ID')}", flush=True)
 
-    for epoch in range(start_epoch, epochs):
-        train_acc, train_loss = do_epoch("train")
-        valid_acc, valid_loss = do_epoch("valid")
+    with utilities.Timer("All epochs:"):
+        for epoch in range(start_epoch, epochs):
+            train_acc, train_loss = do_epoch("train")
+            valid_acc, valid_loss = do_epoch("valid")
 
-        print(f"Epoch:{epoch+1}/{epochs}",
-            f"Train: Accuracy {train_acc:.3f}; Loss {train_loss:.3f}",
-            f"Valid: Accuracy {valid_acc:.3f}; Loss {valid_loss:.3f}", flush=True)
-        
-        save_ckpt(outdir / "last.pt", epoch + 1, model, optimizer, best_valid_acc)
-        if valid_acc > best_valid_acc:
-            best_valid_acc = valid_acc
-            save_ckpt(outdir / "best.pt", epoch + 1, model, optimizer, best_valid_acc)
+            print(f"Epoch:{epoch+1}/{epochs}",
+                f"Train: Accuracy {train_acc:.3f}; Loss {train_loss:.3f}",
+                f"Valid: Accuracy {valid_acc:.3f}; Loss {valid_loss:.3f}", flush=True)
+            
+            save_ckpt(outdir / "last.pt", epoch + 1, model, optimizer, best_valid_acc)
+            if valid_acc > best_valid_acc:
+                best_valid_acc = valid_acc
+                save_ckpt(outdir / "best.pt", epoch + 1, model, optimizer, best_valid_acc)
     
 
 

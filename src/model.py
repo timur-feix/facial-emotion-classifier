@@ -1,4 +1,4 @@
-import torch, torch.nn as nn, utilities
+import torch, torch.nn as nn
 
 class ApplicationStack(nn.Module):
     # stack of Conv -> BN -> ReLU because conv1(...), bn1(...), etc. feels clumsy
@@ -50,16 +50,9 @@ class FacialEmotionRecognitionCNN(nn.Module):
         self.gap = nn.AdaptiveAvgPool2d((1, 1))
         self.fc = nn.Linear(self.list_out_channels[-1], n_classes)
 
-        self.timing_supervisor = [0.0, 0.0]
-    
-    def reset_timing_supervisor(self):
-        self.timing_supervisor = [0.0, 0.0]
-    
+
     def forward(self, x):
-        with utilities.Timer("MODEL forward", show=False) as t:
-            for stack in self.stacks: x = stack(x)
-            x = self.gap(x); x = torch.flatten(x, 1); x = self.fc(x)
-        
-        self.timing_supervisor[0] += t.timer
-        self.timing_supervisor[1] += 1
+        for stack in self.stacks: x = stack(x)
+        x = self.gap(x); x = torch.flatten(x, 1); x = self.fc(x)
+
         return x

@@ -15,4 +15,4 @@ source .venv/bin/activate
 
 nvidia-smi
 
-python src/train.py --epochs 10 --batch-size 64 --num-workers 4 --lr 1e-3 --outdir checkpoints
+python src/train.py --epochs 20 --batch-size 64 --num-workers 4 --lr 1e-3 --outdir checkpoints
