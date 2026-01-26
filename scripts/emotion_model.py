@@ -1,7 +1,8 @@
 # Author : Mays Zuabi
 # Branch : mays/mayss_contribution
 # Purpose : Script for defining the model architecture and training
-# Status : In Progress
+# Status : done - model trained and saved as emotion_model.pt
+
 
 import torch
 import torch.nn as nn
