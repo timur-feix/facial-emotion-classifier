@@ -1,7 +1,7 @@
 #!/bin/bash
 #SBATCH --job-name=fer
 #SBATCH --partition=NvidiaAll
-#SBATCH --time=04:00:00
+#SBATCH --time=00:20:00
 #SBATCH --cpus-per-task=4
 #SBATCH --output=%x_%j.out
 #SBATCH --error=%x_%j.err
