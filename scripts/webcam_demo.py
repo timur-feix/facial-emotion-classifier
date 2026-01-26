@@ -4,8 +4,7 @@
 # Status : In Progress
 import cv2
 import time
-import torch
-import os 
+import torch 
 import numpy as np
 import mediapipe as mp
 
