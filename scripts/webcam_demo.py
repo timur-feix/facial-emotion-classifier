@@ -6,53 +6,42 @@ import cv2
 import time
 import torch
 import os 
-import sys
 import numpy as np
 import mediapipe as mp
 
-from scripts.emotion_model import ResNetEmotionModel, EMOTION_DICT
-from scripts.gradcamEAI import load_model, compute_gradcam, transform
+from scripts.emotion_model import EMOTION_DICT
+from scripts.gradcamEAI import load_model, compute_gradcam
 class WebcamDemo:
     def __init__(self, model_weights='emotion_model.pt'):
-        self.model, self.device = load_model(model_weights)
+        self.res_model, self.device = load_model(model_weights)
+        self.res_model.eval()
         self.emotion_dict = EMOTION_DICT
+        self.gradcam_enabled = False
+
         # Initialize Mediapipe Face Detection
         self.mp_face_detection = mp.solutions.face_detection
-        self.mp_drawing = mp.solutions.drawing_utils
-        self.mp_drawing_styles = mp.solutions.drawing_styles
-        self.face_detection = self.mp_face_detection.FaceDetection(model_selection=0, min_detection_confidence=0.5)
-
-        self.face_mesh = mp.tasks.vision.FaceLandmarker.create_from_options(
-            mp.tasks.vision.FaceLandmarkerOptions(
-                base_options=mp.tasks.BaseOptions(
-                    model_asset_path= self.load_model()),
-                    running_mode=mp.tasks.vision.RunningMode.LIVE_STREAM,
-                    num_faces=1,
-                    min_face_presence_confidence=0.5,
-                    min_detection_confidence=0.5,
-                    min_tracking_confidence=0.5))
+        self.face_detector = self.mp_face_detection.FaceDetection(
+                            model_selection=0,
+                            min_detection_confidence=0.5)
         
-    #webcam implementation with and without gradcam overlay
-    def webcam_hybrid(model, device):
+        self.WINDOW_NAME = "Webcam Emotion Recognition Demo"
+    
+    #prepare face for model input resolution
+    def preprocess_face(self, frame):
+        face_gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+        face_resized = cv2.resize(face_gray, (64, 64))
+        face_normalized = face_resized / 255.0
+        face_tensor = torch.tensor(face_normalized, dtype=torch.float32).unsqueeze(0).unsqueeze(0)  # add batch and channel dims
+        return face_tensor.to(self.device)
 
+    def run(self):
+        # Open a connection to the webcam
+        cap_webcam = cv2.VideoCapture(0) 
 
-
-
-# window variables
-full_screen = False
-WINDOW_NAME = "Webcam Emotion Recognition Demo"
-cam_height = 480
-cam_width = 640
-cv2.resizeWindow(WINDOW_NAME, cam_width, cam_height)
-cv2.moveWindow(WINDOW_NAME, 0, 0)
-cv2.setWindowTitle(WINDOW_NAME, WINDOW_NAME)
-
-# Open a connection to the webcam
-cap_webcam = cv2.VideoCapture(0)
-
-if not cap_webcam.isOpened():
-    print("Error: Could not open camera.")
-    sys.exit()
+        if not cap_webcam.isOpened():
+            print("Error: Could not open camera.")
+            exit()
+        
 
 # Load the pre-trained emotion recognition model
 base_option = Python.BaseOption(model_assest_path='emotion_model.pt')
@@ -62,6 +51,22 @@ optipons
 # frame and showing face box
 fps = cap_webcam.get(cv2.CAP_PROP_FPS)
 frames_number = 0 
+
+    #webcam implementation with and without gradcam overlay
+    def webcam_hybrid(model, device):
+
+
+
+
+# window variables
+full_screen = False
+cam_height = 480
+cam_width = 640
+cv2.resizeWindow(WINDOW_NAME, cam_width, cam_height)
+cv2.moveWindow(WINDOW_NAME, 0, 0)
+cv2.setWindowTitle(WINDOW_NAME, WINDOW_NAME)
+
+
 
 # fetch face
 for face_results in results:
