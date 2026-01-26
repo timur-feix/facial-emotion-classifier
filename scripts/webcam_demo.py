@@ -25,7 +25,7 @@ class WebcamDemo:
         
         self.WINDOW_NAME = "Webcam Emotion Recognition Demo"
     
-    #prepare face for model input resolution
+    # prepare face for model input 
     def preprocess_face(self, frame):
         face_gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
         face_resized = cv2.resize(face_gray, (64, 64))
@@ -36,12 +36,11 @@ class WebcamDemo:
     def run(self):
         # Open a connection to the webcam
         cap_webcam = cv2.VideoCapture(0) 
-
         if not cap_webcam.isOpened():
             print("Error: Could not open camera.")
             exit()
         
-        prev_time = time.time()
+        start_time = time.time()
 
         print("Controls:")
         print("Press 'g' -> to toggle Grad-CAM overlay.")
@@ -69,6 +68,7 @@ class WebcamDemo:
 
                     # Extract face Region of Interest (ROI)
                     face_roi = frame[y1:y2, x1:x2]
+                    # check if face_roi is out of frame
                     if face_roi.size > 0:
                         face_tensor = self.preprocess_face(face_roi)
 
@@ -96,9 +96,9 @@ class WebcamDemo:
                                 0.9, (36,255,12), 2)
                     
                     # Calculate and display FPS
-                    curr_time = time.time()
-                    fps = 1 / (curr_time - prev_time)
-                    prev_time = curr_time
+                    end_time = time.time()
+                    fps = 1 / (end_time - start_time)
+                    start_time = end_time
                     cv2.putText(frame, f'FPS: {fps:.2f}', (10, 30),
                                 cv2.FONT_HERSHEY_SIMPLEX, 0.7,
                                 (0, 255, 0), 2)
@@ -117,9 +117,9 @@ class WebcamDemo:
                         break
 
 
-                # closing the webcam
-                cap_webcam.release()
-                cv2.destroyAllWindows()
+            # closing the webcam
+            cap_webcam.release()
+            cv2.destroyAllWindows()
 
 if __name__ == "__main__":
     print("Starting Webcam Emotion Recognition Demo...\n")
