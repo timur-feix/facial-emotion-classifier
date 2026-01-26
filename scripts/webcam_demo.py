@@ -1,6 +1,6 @@
 # Author : Mays Zuabi
 # Branch : mays/mayss_contribution
-# Purpose : real-time webcam demo 
+# Purpose : real-time webcam demo (Hybrid mode with and without Grad-CAM overlay)
 # Status : In Progress
 import cv2
 import time
@@ -42,69 +42,87 @@ class WebcamDemo:
             print("Error: Could not open camera.")
             exit()
         
+        prev_time = time.time()
 
-# Load the pre-trained emotion recognition model
-base_option = Python.BaseOption(model_assest_path='emotion_model.pt')
-optipons 
-# Grad-CAM & overlay
+        print("Controls:")
+        print("Press 'g' -> to toggle Grad-CAM overlay.")
+        print("Press 'q' -> to quit.")
 
-# frame and showing face box
-fps = cap_webcam.get(cv2.CAP_PROP_FPS)
-frames_number = 0 
+        while True:
+            ret, frame = cap_webcam.read()
+            if not ret:
+                print("Error: Could not read frame.")
+                break
 
-    #webcam implementation with and without gradcam overlay
-    def webcam_hybrid(model, device):
+            # Convert the frame to RGB for Mediapipe
+            h, w, _ = frame.shape
+            rgb_frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+            results = self.face_detector.process(rgb_frame)
+
+            # Process each detected face
+            if results.detections:
+                for detection in results.detections:
+                    bboxC = detection.location_data.relative_bounding_box
+                    x1 = int(bboxC.xmin * w)
+                    y1 = int(bboxC.ymin * h)
+                    x2 = int((bboxC.xmin + bboxC.width) * w)
+                    y2 = int((bboxC.ymin + bboxC.height) * h)
+
+                    # Extract face Region of Interest (ROI)
+                    face_roi = frame[y1:y2, x1:x2]
+                    if face_roi.size > 0:
+                        face_tensor = self.preprocess_face(face_roi)
+
+                    # Model prediction
+                    with torch.no_grad():
+                        outputs = self.res_model(face_tensor)
+                        _, predicted = torch.max(outputs, 1)
+                        emotion_label = self.emotion_dict[predicted.item()]
+
+                    # Grad-CAM overlay
+                    if self.gradcam_enabled:
+                        cam_image = compute_gradcam(self.res_model,face_tensor,
+                                                     predicted.item(), self.device)
+                        cam_image_resized = cv2.resize(cam_image, (x2 - x1, y2 - y1))
+
+                        heatmapped_face = cv2.applyColorMap(np.uint8(255 * cam_image_resized),
+                                                             cv2.COLORMAP_JET)
+                        frame[y1:y2, x1:x2] = cv2.addWeighted(frame[y1:y2, x1:x2], 0.5,
+                                                               heatmapped_face, 0.5, 0)
+
+                    # Draw bounding box and label
+                    cv2.rectangle(frame, (x1, y1), (x2, y2  ), (0, 255, 0), 2)
+                    cv2.putText(frame, emotion_label,
+                                (x1, y1-10), cv2.FONT_HERSHEY_SIMPLEX,
+                                0.9, (36,255,12), 2)
+                    
+                    # Calculate and display FPS
+                    curr_time = time.time()
+                    fps = 1 / (curr_time - prev_time)
+                    prev_time = curr_time
+                    cv2.putText(frame, f'FPS: {fps:.2f}', (10, 30),
+                                cv2.FONT_HERSHEY_SIMPLEX, 0.7,
+                                (0, 255, 0), 2)
+                    
+                    status = "Grad-CAM ON" if self.gradcam_enabled else "Grad-CAM OFF"
+                    cv2.putText(frame, status, (10, 60),
+                                cv2.FONT_HERSHEY_SIMPLEX, 0.7,
+                                (0, 255, 0), 2)
+                    cv2.imshow(self.WINDOW_NAME, frame) 
+
+                    # Handle key presses
+                    key = cv2.waitKey(1) & 0xFF
+                    if key == ord('g'):
+                        self.gradcam_enabled = not self.gradcam_enabled
+                    elif key == ord('q'):
+                        break
 
 
-
-
-# window variables
-full_screen = False
-cam_height = 480
-cam_width = 640
-cv2.resizeWindow(WINDOW_NAME, cam_width, cam_height)
-cv2.moveWindow(WINDOW_NAME, 0, 0)
-cv2.setWindowTitle(WINDOW_NAME, WINDOW_NAME)
-
-
-
-# fetch face
-for face_results in results:
-    ret, frame = cap_webcam.read()
-    cv2.imshow('Webcam Emotion Recognition', frame)
-    cv2.circle(frame, (50, 50), 10, (0, 255, 0), -1)  
-    cv2.rectangle(frame, (100, 100), (200, 200), (255, 0, 0), 2)
-
-    cv2.waitKey(0) # Waits indefinitely until a key is pressed
-
-
-
-for face_results in face_detection.processes: #
-    ret, frame = cap_webcam.read()
-    if not ret:
-        break
-
-    frames_number += 1
-    start_time = time.time()
-
-# display predicted emotion on the video feed
-detected_result = mp_face_detection.detect(cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)) #
-
-
-# FPS calculation
-    end_time = time.time()
-    fps = frames_number / (end_time - start_time)
-    cv2.putText(frame, f'FPS: {fps:.2f}', (10, 30), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 255, 0), 2)
-
-    cv2.imshow(WINDOW_NAME, frame)
-
-    if cv2.waitKey(1) & 0xFF == ord('q'):
-        break
-# closing the webcam
-cap_webcam.release()
-cv2.destroyAllWindows()
+                # closing the webcam
+                cap_webcam.release()
+                cv2.destroyAllWindows()
 
 if __name__ == "__main__":
     print("Starting Webcam Emotion Recognition Demo...\n")
-    emotion_matcher = WebcamEmotionMatcher()
-    emotion_matcher.run()
+    live_demo = WebcamDemo()
+    live_demo.run()
