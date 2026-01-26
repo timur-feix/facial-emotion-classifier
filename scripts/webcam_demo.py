@@ -69,8 +69,9 @@ class WebcamDemo:
                     # Extract face Region of Interest (ROI)
                     face_roi = frame[y1:y2, x1:x2]
                     # check if face_roi is out of frame
-                    if face_roi.size > 0:
-                        face_tensor = self.preprocess_face(face_roi)
+                    if face_roi.size == 0:
+                        continue
+                    face_tensor = self.preprocess_face(face_roi)
 
                     # Model prediction
                     with torch.no_grad():
