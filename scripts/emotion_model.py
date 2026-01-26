@@ -27,18 +27,22 @@ EMOTION_DICT = {
 class BalancedDataset(Dataset):
     def __init__(self, split):
         self.root = Path(f"data/balanced-raf-db/{split}")
-        self.df = pd.read_csv(self.root / "labels.csv") #
-        self.transform = transforms.ToTensor()
+        self.df = pd.read_csv(self.root / "labels.csv")
+
+        self.transform = transforms.Compose([
+        transforms.Resize((64, 64)),
+        transforms.ToTensor(),
+        transforms.Normalize(mean=[0.5], std=[0.5])
+        ])
 
     def __len__(self):
         return len(self.df) 
     def __getitem__(self, idx):
         row = self.df.iloc[idx]
         image = Image.open(self.root / row["filename"]).convert('L') #
-        label = EMOTION_DICT.index(row["label"])
-
-        if self.transform:
-            image = self.transform(image)
+        label = EMOTION_DICT[row["label"]]
+        
+        image = self.transform(image)
         return image, label
      
 class ResNetEmotionModel(nn.Module):
@@ -53,46 +57,78 @@ class ResNetEmotionModel(nn.Module):
     def forward(self, x):
         return self.model(x) 
     
-    def training_model(self):
+    def training_model(epochs=5, batch_size=64, lr=1e-3):
         device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
         model = ResNetEmotionModel().to(device)
 
-        optimizer = torch.optim.Adam(model.parameters(), lr=1e-3) #lr placeholder
+        optimizer = torch.optim.Adam(model.parameters(), lr=lr) 
         criterion = nn.CrossEntropyLoss()
         train_loader = DataLoader(
             BalancedDataset("train"),
-            batch_size=64,
-            shuffle=True
+            batch_size=batch_size,
+            shuffle=True,
+            num_workers=4,
+            pin_memory=True
         )
 
-        losses = []
-        correct = 0
-        total = 0
+        epoch_losses = []
+        epoch_accuracies = []
 
-        for epoch in tqdm(range(10), desc='Epoch'):
+        for epoch in tqdm(range(epochs), desc='Epoch', position=0):
             model.train()
-            for step, [example, label] in enumerate(tqdm(train_loader, desc='Batch')): 
-                    predictions = model(example)
-                    loss = criterion(predictions, label)
+            running_loss = 0.0
+            correct = 0
+            total = 0
+
+            batch_bar = tqdm(train_loader, desc=f'Epoch {epoch+1}/{epochs}',
+                              position=1, leave=False)
+            
+            for images, label in batch_bar:
+                    images = images.to(device)
+                    label = label.to(device)
                     #clearing old gradients
                     optimizer.zero_grad()
-                    #new gradients 
+                    outputs = model(images)
+                    loss = criterion(outputs, label)
+
                     loss.backward()
                     optimizer.step()
-                    losses.append(loss.item()) 
+                    running_loss += loss.item()
+                    _, predicted = torch.max(outputs, 1)
 
-                    correct += (predictions == label).sum().item()
+                    correct += (predicted == label).sum().item()
                     total += label.size(0)
-            print(f"Epoch {epoch+1} finished, Loss: {loss.item()}"
-                f"accuracy: {100. * correct / total}")
+                    batch_bar.set_postfix(loss=loss.item(),
+                                          accuracy=f"{100. * correct / total:.2f}%")
+            avg_loss = running_loss / len(train_loader)
+            accuracy = 100. * correct / total
+            epoch_losses.append(avg_loss)
+            epoch_accuracies.append(accuracy)
+
+            tqdm.write(f"Epoch [{epoch+1}/{epochs}], \n Loss: {avg_loss:.4f}, Accuracy: {accuracy:.2f}%")
         
         #saving the trained model
         torch.save(model.state_dict(), 'emotion_model.pt') 
+        print("\nModel saved as emotion_model.pt")
         
         #plotting the loss curve
-        plt.plot(losses)
-        plt.xlabel('Step')
+        plt.figure(figsize=(10,5))
+
+        plt.subplot(1,2,1)
+        plt.plot(epoch_losses, marker='o')
+        plt.title('Training Loss over Epochs')
+        plt.xlabel('Epoch')
         plt.ylabel('Loss')
+
+        plt.subplot(1,2,2)
+        plt.plot(epoch_accuracies, marker='+')
+        plt.title('Training Accuracy over Epochs')
+        plt.xlabel('Epoch')
+        plt.ylabel('Accuracy (%)')
+
+        plt.tight_layout()
         plt.show()
 
-print(f"the sum of parameters: {sum([_.numel() for _ in ResNetEmotionModel().parameters()])}")
+if __name__ == "__main__":
+    print(f"the sum of parameters: {sum([_.numel() for _ in ResNetEmotionModel().parameters()])}")
+    training_model(epochs=5)
