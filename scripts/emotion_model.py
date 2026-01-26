@@ -128,3 +128,7 @@ class ResNetEmotionModel(nn.Module):
 
         plt.tight_layout()
         plt.show()
+
+if __name__ == "__main__":
+    print(f"the sum of parameters: {sum([_.numel() for _ in ResNetEmotionModel().parameters()])}")
+    ResNetEmotionModel.training_model(epochs=5, batch_size=64, lr=1e-3)
