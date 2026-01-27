@@ -15,6 +15,15 @@ from pathlib import Path
 import pandas as pd
 import matplotlib.pyplot as plt
 
+# set random seed for reproducibility
+def set_seed(seed=42):
+    torch.manual_seed(seed)
+    torch.cuda.manual_seed_all(seed)
+    import random
+    random.seed(seed)
+    import numpy as np
+    np.random.seed(seed)
+
 EMOTION_DICT = {
     0: 'angry',
     1: 'disgust',
@@ -30,8 +39,19 @@ NUM_CLASSES = len(EMOTION_DICT)
 class BalancedDataset(Dataset):
     def __init__(self, split):
         self.root = Path(f"data/balanced-raf-db/{split}")
+        csv_path = self.root / "labels.csv"
+
+        # basic checks
+        if not self.root.exists():
+            raise FileNotFoundError(f"Dataset path {self.root} does not exist.")
+        if not csv_path.exists():
+            raise FileNotFoundError(f"CSV file {csv_path} does not exist.")
+        
         self.df = pd.read_csv(self.root / "labels.csv")
 
+        if not {"filename", "label"}.issubset(self.df.columns):
+            raise ValueError("CSV file must contain 'filename' and 'label' columns.")
+        
         self.transform = transforms.Compose([
         transforms.Resize((64, 64)),
         transforms.ToTensor(),
@@ -43,9 +63,14 @@ class BalancedDataset(Dataset):
     
     def __getitem__(self, idx):
         row = self.df.iloc[idx]
-        image = Image.open(self.root / row["filename"]).convert('L') #
-        label = int(row["label"]) #label as integer
+
+        img_path = self.root / row["filename"]
+        try:
+            image = Image.open(img_path).convert('L')  # convert to grayscale
+        except Exception as e:
+            raise RuntimeError(f"Error loading image {img_path}: {e}")
         
+        label = int(row["label"]) #label as integer
         image = self.transform(image)
         return image, label
      
@@ -62,6 +87,7 @@ class ResNetEmotionModel(nn.Module):
         return self.model(x) 
     
     #training, validation, and testing
+    @staticmethod
     def run_epoch(model, data_loader, criterion, optimizer=None, device="cpu"):
         is_training = optimizer is not None
         model.train() if is_training else model.eval()
@@ -91,21 +117,26 @@ class ResNetEmotionModel(nn.Module):
 
         return avg_loss, accuracy
     
-    def training_model(epochs=5, batch_size=64, lr=1e-3):
+    @staticmethod
+    def training_model(epochs=5, batch_size=64, lr=1e-3,
+                       output_path='emotion_model.pt', show_plots=True):
+        set_seed()
         device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
         model = ResNetEmotionModel().to(device)
 
         optimizer = torch.optim.Adam(model.parameters(), lr=lr) 
         criterion = nn.CrossEntropyLoss()
 
+        num_workers = 0 if device.type == 'cpu' else 4
+        pin_memory = device.type == 'cuda'
         loaders = {
             split: DataLoader(
                 BalancedDataset(split),
                 batch_size=batch_size,
                 shuffle=(split == "train"),
-                num_workers=4,
-                pin_memory=True
-            ) for torch.split in ["train", "val", "test"]
+                num_workers=num_workers,
+                pin_memory=pin_memory
+            ) for split in ["train", "val", "test"]
         }
 
         epoch_losses = []
@@ -131,8 +162,8 @@ class ResNetEmotionModel(nn.Module):
         print(f"\nTest Loss: {test_loss:.4f}, Test Accuracy: {test_acc:.2f}%")
 
         #saving the trained model
-        torch.save(model.state_dict(), 'emotion_model.pt') 
-        print("\nModel saved as emotion_model.pt")
+        torch.save(model.state_dict(), output_path) 
+        print(f"\nModel saved as {output_path}")
         
         #plotting the loss curve
         plt.figure(figsize=(10,5))
