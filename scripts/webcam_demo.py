@@ -39,6 +39,8 @@ class WebcamDemo:
             exit()
         
         start_time = time.time()
+        fps = 0.0
+        font = cv2.FONT_HERSHEY_SIMPLEX
 
         print("Controls:")
         print("Press 'g' -> to toggle Grad-CAM overlay.")
@@ -104,6 +106,16 @@ class WebcamDemo:
             cv2.putText(frame, status, (10, 60),
                         cv2.FONT_HERSHEY_SIMPLEX, 0.7,
                         (0, 255, 0), 2)
+            
+            # Title bar
+            cv2.putText(frame, "Webcam Emotion Recognition Demo",
+                        (frame.shape[1]//2 - 200, 30),
+                        cv2.FONT_HERSHEY_SIMPLEX, 0.7,
+                        (255, 0, 0), 2)
+            # Status bar 
+            self.draw_text(frame, "Press 'g' to toggle Grad-CAM, 'q' to quit",
+                            pos_type=(10, frame.shape[0] - 10))
+            
 
             cv2.imshow(self.WINDOW_NAME, frame)
 
@@ -119,6 +131,17 @@ class WebcamDemo:
         # closing the webcam
         cap_webcam.release()
         cv2.destroyAllWindows()
+
+    def draw_text(img, text, font_scale = 0.6, color=(0, 255, 0), bg_color =(0, 0, 0),
+                           thickness=2, pos_type='bottom_left', padding=5):
+                font = cv2.FONT_HERSHEY_SIMPLEX
+                text_size = cv2.getTextSize(text, font, font_scale, thickness)[0]
+                cv2.rectangle(img,
+                              (10 - padding, img.shape[0] - 10 - text_size[1] - padding),
+                              (10 + text_size[0] + padding, img.shape[0] - 10 + padding),
+                              bg_color, -1)
+                cv2.putText(img, text, pos_type, font, font_scale, color, thickness , cv2.LINE_AA)
+            
 
 if __name__ == "__main__":
     print("Starting Webcam Emotion Recognition Demo...\n")
