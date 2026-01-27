@@ -1,4 +1,4 @@
-# Author : Mays Zuabi
+# Author : Neslihan Bir 
 # Branch : mays/mayss_contribution
 # Purpose: Demo script for video emotion recognition 
 
@@ -33,7 +33,7 @@ def load_model(weigths_path: str, num_classes: int):
     #Loads your trained ResNetEmotionModel from a pth state dict file 
     #Returns: (model, device)
 
-    device = tourch.device ("cuda" if tourch.cuda.is_avaible() else "cpu")
+    device = torch.device ("cuda" if torch.cuda.is_available() else "cpu")
 
     model = ResNetEmotionModel(num_classes=num_classes)
 
@@ -41,7 +41,7 @@ def load_model(weigths_path: str, num_classes: int):
     if not weigths_path.exists():
         raise FileNotFoundError(f"Model. weigths not found: {weigths_path}")
     
-    state = tourch.load(weigths_path, map_location="cpu")
+    state = torch.load(weigths_path, map_location="cpu")
     #Support checkpoints that store state_dict under a key
     if isinstance(state, dict) and "state_dict" in state:
         state = state["state_dict"]
@@ -56,7 +56,7 @@ def load_model(weigths_path: str, num_classes: int):
 #Video Preprocessing 
 #-----------------
 
-def preprocess_frame(frame_bgr: np.ndarray,size: int = 64, grayscale: bool = False) -> tuple[torch.Tensor, np.ndaray]:
+def preprocess_frame(frame_bgr: np.ndarray,size: int = 64, grayscale: bool = False) -> tuple[torch.Tensor, np.ndarray]:
 
     #Convert BGR ->RGB
     rgb = cv2.cvtColor(frame_bgr, cv2.COLOR_BGR2RGB)
@@ -74,13 +74,13 @@ def preprocess_frame(frame_bgr: np.ndarray,size: int = 64, grayscale: bool = Fal
 
     #Normalize for ResNet 
     mean = np.array([0.485, 0.456, 0.406], dtype=np.float32)
-    std = np.array ([0.229, 0.224, 0.225], dytype=np.float32)
-    norm = (rgb_01 - mean) / std
+    std = np.array ([0.229, 0.224, 0.225], dtype=np.float32)
+    norm = (rgb01 - mean) / std
 
     #HWC -> CHW, add batch dimension 
-    input_tensor = torch.from_numpy(norm).permute(2, 0, 1).unsquezze(0)
+    input_tensor = torch.from_numpy(norm).permute(2, 0, 1).unsqueeze(0)
 
-    return input_tensor, rgb_01
+    return input_tensor, rgb01
 
 
 #Writes readable label on the frame
@@ -184,7 +184,7 @@ def run_video_demo(video_in: str,
             continue
 
         # Preprocess
-        x, rgb_01 = preprocess_frame(frame_bgr, size=size, grayscale=grayscale)
+        x, rgb01 = preprocess_frame(frame_bgr, size=size, grayscale=grayscale)
 
         # Predict
         pred_idx, conf, _ = predict_emotion(model, x, device)
@@ -195,7 +195,7 @@ def run_video_demo(video_in: str,
         heatmap = compute_gradcam_heatmap(cam, x.to(device), pred_idx)
 
         # Overlay heatmap onto the resized rgb (size x size)
-        cam_rgb = show_cam_on_image(rgb_01, heatmap, use_rgb=True)  # returns uint8 RGB image
+        cam_rgb = show_cam_on_image(rgb01, heatmap, use_rgb=True)  # returns uint8 RGB image
 
         # Resize overlay back to original video resolution
         cam_bgr = cv2.cvtColor(cam_rgb, cv2.COLOR_RGB2BGR)
