@@ -24,7 +24,6 @@ def set_seed(seed=42):
     torch.manual_seed(seed)
     if torch.cuda.is_available():
         torch.cuda.manual_seed_all(seed)
-set_seed()
 
 EMOTION_DICT = {
     0: 'angry',
@@ -130,9 +129,12 @@ class ResNetEmotionModel(nn.Module):
         return avg_loss, accuracy
     
     @staticmethod
-    def training_model(epochs=5, batch_size=64, lr=1e-3,
+    def training_model(epochs=5, batch_size=64, lr=1e-3, seed = 42, 
                        output_path='emotion_model.pt', show_plots=True):
-        set_seed()
+        set_seed(seed)
+        torch.backends.cudnn.deterministic = True
+        torch.backends.cudnn.benchmark = False
+
         device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
         model = ResNetEmotionModel().to(device)
 

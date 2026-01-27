@@ -15,6 +15,7 @@ import pandas as pd
 from torchvision import transforms
 from PIL import Image
 from pathlib import Path
+import random
 
 from pytorch_grad_cam import GradCAM
 from pytorch_grad_cam.utils.model_targets import ClassifierOutputTarget
@@ -36,12 +37,12 @@ def load_model(weights_path='emotion_model.pt'):
 EMOTION_TO_IDX = {v: k for k, v in EMOTION_DICT.items()}
 
 # Load the test images
-def load_test_data(index = 0):
+def load_test_data():
     test_path = Path("data/balanced-raf-db/test")
     csv_path = test_path / "labels.csv"
 
     df = pd.read_csv(csv_path)
-    row = df.iloc[index]
+    row = df.iloc[random.randrange(len(df))]
 
     image_path = test_path / row["filename"]
     true_label = EMOTION_TO_IDX[row["label"]]
