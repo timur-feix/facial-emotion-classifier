@@ -83,11 +83,13 @@ def compute_gradcam(res_model, image_tensor, class_index, device):
 
 def visualize_results(image_pil, cam, true_label, predicted):
     #overlay gradcam on image
-    # Convert tensor to numpy array for visualization
-    img_np = np.array(image_pil).astype(np.float32) / 255.0
+    # Convert PIL image to match cam size and to numpy for visualization
+    cam_h, cam_w = cam.shape
+    image_resized = image_pil.resize((cam_w, cam_h))
+    img_np = np.array(image_resized).astype(np.float32) / 255.0
     if img_np.ndim == 2:
         img_np = np.stack([img_np] * 3, axis=-1)  # Convert to RGB if grayscale
-    # Overlay Grad-CAM on the image
+    # Overlay Grad-CAM on the image (both now share the same spatial size)
     cam_image = show_cam_on_image(img_np, cam, use_rgb=True)
 
     plt.figure(figsize=(10,5))
