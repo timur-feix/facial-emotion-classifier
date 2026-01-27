@@ -1,0 +1,6 @@
+Traceback (most recent call last):
+  File "<frozen runpy>", line 198, in _run_module_as_main
+  File "<frozen runpy>", line 88, in _run_code
+  File "/Users/mayszuabi/Documents/facial-emotion-classifier/scripts/webcam_demo.py", line 9, in <module>
+    import mediapipe as mp
+ModuleNotFoundError: No module named 'mediapipe'

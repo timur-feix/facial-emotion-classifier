@@ -10,15 +10,17 @@ import mediapipe as mp
 
 from scripts.emotion_model import EMOTION_DICT
 from scripts.gradcamEAI import load_model, compute_gradcam
+from mediapipe.solutions import face_detection
 class WebcamDemo:
+    
     def __init__(self, model_weights='emotion_model.pt'):
-        self.res_model, self.device = load_model(model_weights)
-        self.res_model.eval()
+        self.model, self.device = load_model(model_weights)
+        self.model.eval()
         self.emotion_dict = EMOTION_DICT
         self.gradcam_enabled = False
 
         # Initialize Mediapipe Face Detection
-        self.mp_face_detection = mp.solutions.face_detection
+        self.mp_face_detection = mp.face_detection
         self.face_detector = self.mp_face_detection.FaceDetection(
                             model_selection=0,
                             min_detection_confidence=0.5)
@@ -61,10 +63,10 @@ class WebcamDemo:
             if results.detections:
                 for detection in results.detections:
                     bboxC = detection.location_data.relative_bounding_box
-                    x1 = int(bboxC.xmin * w)
-                    y1 = int(bboxC.ymin * h)
-                    x2 = int((bboxC.xmin + bboxC.width) * w)
-                    y2 = int((bboxC.ymin + bboxC.height) * h)
+                    x1 = max(int(bboxC.xmin * w), 0)
+                    y1 = max(int(bboxC.ymin * h), 0)
+                    x2 = min(int((bboxC.xmin + bboxC.width) * w), w)
+                    y2 = min(int((bboxC.ymin + bboxC.height) * h), h)
 
                     # Extract face Region of Interest (ROI)
                     face_roi = frame[y1:y2, x1:x2]
@@ -75,13 +77,13 @@ class WebcamDemo:
 
                     # Model prediction
                     with torch.no_grad():
-                        outputs = self.res_model(face_tensor)
+                        outputs = self.model(face_tensor)
                         _, predicted = torch.max(outputs, 1)
                         emotion_label = self.emotion_dict[predicted.item()]
 
                     # Grad-CAM overlay
                     if self.gradcam_enabled:
-                        cam_image = compute_gradcam(self.res_model,face_tensor,
+                        cam_image = compute_gradcam(self.model,face_tensor,
                                                      predicted.item(), self.device)
                         cam_image_resized = cv2.resize(cam_image, (x2 - x1, y2 - y1))
 
@@ -118,9 +120,9 @@ class WebcamDemo:
                         break
 
 
-            # closing the webcam
-            cap_webcam.release()
-            cv2.destroyAllWindows()
+        # closing the webcam
+        cap_webcam.release()
+        cv2.destroyAllWindows()
 
 if __name__ == "__main__":
     print("Starting Webcam Emotion Recognition Demo...\n")
