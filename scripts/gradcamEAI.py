@@ -25,13 +25,13 @@ from pytorch_grad_cam.utils.image import show_cam_on_image
 def load_model(weights_path='emotion_model.pt'):
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     
-    res_model = ResNetEmotionModel(num_classes=len(EMOTION_DICT)) 
-    res_model.load_state_dict(torch.load(weights_path,
+    model = ResNetEmotionModel(num_classes=len(EMOTION_DICT)) 
+    model.load_state_dict(torch.load(weights_path,
                                           map_location=device))
-    res_model.to(device)
-    res_model.eval()
+    model.to(device)
+    model.eval()
 
-    return res_model, device
+    return model, device
 
 EMOTION_TO_IDX = {v: k for k, v in EMOTION_DICT.items()}
 
@@ -58,22 +58,22 @@ def load_test_data(index = 0):
     
 
 #prediction pass
-def get_prediction(res_model, image_tensor, device):
+def get_prediction(model, image_tensor, device):
     image_tensor = image_tensor.to(device)
 
     with torch.no_grad():
-        output = res_model(image_tensor)
+        output = model(image_tensor)
         predicted = torch.argmax(output, 1).item()
 
     return predicted 
      
 # Grad-CAM setup:actual usage of the existing gradcam
-def compute_gradcam(res_model, image_tensor, class_index, device):
+def compute_gradcam(model, image_tensor, class_index, device):
     # ensuring the tensor is on the correct device
     image_tensor = image_tensor.to(device)
-    target_layers = [res_model.model.layer4[-1]] # target layer in the model bzw. last conv layer
+    target_layers = [model.model.layer4[-1]] # target layer in the model bzw. last conv layer
     
-    cam = GradCAM(model=res_model,
+    cam = GradCAM(model=model,
                   target_layers=target_layers)
     targets = [ClassifierOutputTarget(class_index)]
     grayscale_cam = cam(input_tensor=image_tensor,
@@ -113,8 +113,8 @@ def visualize_results(image_pil, cam, true_label, predicted):
     plt.show()
 
 if __name__ == "__main__":
-    res_model, device = load_model()
+    model, device = load_model()
     image_pil, image_tensor, true_label = load_test_data()
-    predicted = get_prediction(res_model, image_tensor, device)
-    cam = compute_gradcam(res_model, image_tensor, predicted, device)
+    predicted = get_prediction(model, image_tensor, device)
+    cam = compute_gradcam(model, image_tensor, predicted, device)
     visualize_results(image_pil, cam, true_label, predicted)

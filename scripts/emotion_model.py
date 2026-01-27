@@ -14,15 +14,17 @@ from PIL import Image
 from pathlib import Path
 import pandas as pd
 import matplotlib.pyplot as plt
+import random
+import numpy as np
 
 # set random seed for reproducibility
 def set_seed(seed=42):
-    torch.manual_seed(seed)
-    torch.cuda.manual_seed_all(seed)
-    import random
     random.seed(seed)
-    import numpy as np
     np.random.seed(seed)
+    torch.manual_seed(seed)
+    if torch.cuda.is_available():
+        torch.cuda.manual_seed_all(seed)
+set_seed()
 
 EMOTION_DICT = {
     0: 'angry',
@@ -34,6 +36,7 @@ EMOTION_DICT = {
 }
 
 NUM_CLASSES = len(EMOTION_DICT)
+EMOTION_TO_IDX = {v: k for k, v in EMOTION_DICT.items()}
 
 # custom Dataset for loading the balanced RAF-DB dataset
 class BalancedDataset(Dataset):
@@ -70,7 +73,15 @@ class BalancedDataset(Dataset):
         except Exception as e:
             raise RuntimeError(f"Error loading image {img_path}: {e}")
         
-        label = int(row["label"]) #label as integer
+        raw_label = row["label"]
+        if isinstance(raw_label, str):
+            key = raw_label.strip().lower()
+            if key not in EMOTION_TO_IDX:
+                raise ValueError(f"Unknown label '{raw_label}' in {img_path}")
+            label = EMOTION_TO_IDX[key]
+        else:
+            label = int(raw_label)
+
         image = self.transform(image)
         return image, label
      
@@ -96,7 +107,8 @@ class ResNetEmotionModel(nn.Module):
 
         # gradient tracking only if in training mode
         with torch.set_grad_enabled(is_training):
-            for images, labels in data_loader:
+            batch_bar = tqdm(data_loader, desc='Batch', leave=False)
+            for images, labels in batch_bar:
                 images, labels = images.to(device), labels.to(device)
 
                 outputs = model(images)
