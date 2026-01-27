@@ -10,7 +10,7 @@ import mediapipe as mp
 
 from scripts.emotion_model import EMOTION_DICT
 from scripts.gradcamEAI import load_model, compute_gradcam
-from mediapipe.solutions import face_detection
+
 class WebcamDemo:
     
     def __init__(self, model_weights='emotion_model.pt'):
