@@ -72,7 +72,7 @@ def get_prediction(model, image_tensor, device):
 def compute_gradcam(model, image_tensor, class_index, device):
     # ensuring the tensor is on the correct device
     image_tensor = image_tensor.to(device)
-    target_layers = [model.model.layer4[-1]] # target layer in the model bzw. last conv layer
+    target_layers = [model.model.layer3[-1]] # target layer in the model bzw. last conv layer
     
     cam = GradCAM(model=model,
                   target_layers=target_layers)
