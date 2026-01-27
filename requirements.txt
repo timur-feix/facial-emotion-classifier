@@ -5,7 +5,6 @@ kagglehub
 pillow
 matplotlib
 pandas
-mediapipe
 tqdm
 opencv-python
-#git+https://github.com/jacobgil/pytorch-grad-cam.git
+grad-cam
