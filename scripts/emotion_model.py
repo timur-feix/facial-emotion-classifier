@@ -129,7 +129,7 @@ class ResNetEmotionModel(nn.Module):
         return avg_loss, accuracy
     
     @staticmethod
-    def training_model(epochs=5, batch_size=64, lr=1e-3, seed = 42, 
+    def training_model(epochs=10, batch_size=64, lr=1e-3, seed = 42, 
                        output_path='emotion_model.pt', show_plots=True):
         set_seed(seed)
         torch.backends.cudnn.deterministic = True
