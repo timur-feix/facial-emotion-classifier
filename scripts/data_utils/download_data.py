@@ -14,4 +14,3 @@ for item in src_dir.iterdir():
     shutil.move(str(item), dest_dir / item.name)
 
 shutil.rmtree(src_dir)
-
