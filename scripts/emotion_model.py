@@ -1,11 +1,6 @@
 # Author : Mays Zuabi
 # Branch : mays/mayss_contribution
 # Purpose : Script for defining the model architecture and training
-# Status : In Progress
-
-# Author : Mays Zuabi
-# Branch : mays/mayss_contribution
-# Purpose : Script for defining the model architecture and training
 # Status : done - model trained and saved as emotion_model.pt
 
 
@@ -205,4 +200,3 @@ class ResNetEmotionModel(nn.Module):
 if __name__ == "__main__":
     print(f"Total parameters: {sum([_.numel() for _ in ResNetEmotionModel().parameters()])}")
     ResNetEmotionModel.training_model(epochs=5, batch_size=64, lr=1e-3)
-
