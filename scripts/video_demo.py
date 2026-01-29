@@ -81,7 +81,7 @@ def run_video_demo(video_path: str, weights_path: str = "emotion_model.pt"):
             break
 
     cap.release()
-    cv2.destroyAllWindows()
+    cv2.destroyAllWindows()‚
     print("Done.")
 
 if __name__ == "__main__":
