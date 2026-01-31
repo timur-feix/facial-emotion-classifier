@@ -9,17 +9,48 @@ import torch
 import numpy as np
 from torchvision import transforms
 
-from scripts.gradcamEAI import load_model, compute_gradcam
-from scripts.emotion_model import EMOTION_DICT
+from src.model import FacialEmotionRecognitionCNN
+from pytorch_grad_cam import GradCAM 
+from pytorch_grad_cam.utils.model_targets import ClassifierOutputTarget
 from pytorch_grad_cam.utils.image import show_cam_on_image
 
+EMOTION_DICT = {
+    0: "angry",
+    1: "disgust",
+    2: "fear",
+    3: "happy",
+    4: "sad",
+    5: "surprise",
+}
+
+def load_model(weights_path: str):
+    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+                        
+    model = FacialEmotionRecognitionCNN(n_classes=6)
+    ckpt = torch.load(weights_path, map_location=device)
+    model.load_state_dict(ckpt["model"])
+
+    model.to(device)
+    model.eval()
+    return model, device
+
+
+def compute_gradcam(model, image_tensor, class_index):
+    #letzter conv layer im CNN
+    target_layers = [model.stacks[-1].conv]
+
+    cam = GradCAM(model= model, target_layers=target_layers)
+    targets = [ClassifierOutputTarget(class_index)]
+    grayscale_cam = cam(input_tensor=image_tensor, targets=targets)
+    return grayscale_cam[0]
+
+                          
 # Preprocessing transform
 transform = transforms.Compose([
     transforms.ToPILImage(),
     transforms.Resize((64, 64)),
-    transforms.Grayscale(),
     transforms.ToTensor(),
-    transforms.Normalize(mean=[0.5], std=[0.5]),
+    transforms.Normalize(mean=[0.5, 0.5, 0.5], std=[0.5, 0.5, 0.5]),
 ])
 
 def run_video_demo(video_path: str, weights_path: str = "emotion_model.pt"):
@@ -42,7 +73,7 @@ def run_video_demo(video_path: str, weights_path: str = "emotion_model.pt"):
         # 3) Convert frame (OpenCV uses BGR)
         frame_rgb = cv2.cvtColor(frame_bgr, cv2.COLOR_BGR2RGB)
 
-        # 4) Preprocess -> tensor [1,1,64,64]
+        # 4) Preprocess -> tensor [1,3,64,64]
         image_tensor = transform(frame_rgb).unsqueeze(0).to(device)
 
         # 5) Predict
@@ -53,7 +84,7 @@ def run_video_demo(video_path: str, weights_path: str = "emotion_model.pt"):
         emotion_name = EMOTION_DICT[predicted]
 
         # 6) GradCAM heatmap (0..1)
-        heatmap = compute_gradcam(model, image_tensor, predicted, device)
+        heatmap = compute_gradcam(model, image_tensor, predicted)
 
         heatmap = cv2.resize(heatmap, (frame_rgb.shape[1], frame_rgb.shape[0]))
 
@@ -85,4 +116,4 @@ def run_video_demo(video_path: str, weights_path: str = "emotion_model.pt"):
     print("Done.")
 
 if __name__ == "__main__":
-    run_video_demo("video.mov", weights_path="emotion_model.pt")
+    run_video_demo("video.mov", weights_path="checkpoints/best.pt")
