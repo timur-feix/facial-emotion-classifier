@@ -1,10 +1,16 @@
 #!/bin/bash
 #SBATCH --job-name=fer
-#SBATCH --partition=Krater
+#SBATCH --partition=NvidiaAll
+#SBATCH --nodelist=dacit
 #SBATCH --time=00:20:00
 #SBATCH --cpus-per-task=4
 #SBATCH --output=%x_%j.out
 #SBATCH --error=%x_%j.err
+
+export TMPDIR=$HOME/tmp/$SLURM_JOB_ID
+export TORCH_EXTENSIONS_DIR=$TMPDIR/torch_extensions
+export XDG_CACHE_HOME=$TMPDIR/.cache
+mkdir -p "$TMPDIR"
 
 set -e
 cd "$SLURM_SUBMIT_DIR"
