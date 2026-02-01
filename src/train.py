@@ -5,6 +5,8 @@ from torch.utils.data import DataLoader
 
 from pathlib import Path
 
+from tqdm import tqdm
+
 
 def parse_args():
     p = argparse.ArgumentParser()
@@ -161,24 +163,33 @@ def main():
         start_epoch, best_valid_acc, global_step = load_ckpt(resume_path, model, optimizer, scheduler)
 
     # epoch loop helpers
-    def do_epoch(mode: str):
+    def do_epoch(mode: str, epoch: int):
         nonlocal global_step
 
         if mode == "train":
             context_manager = utilities.NullContext()
             model.train()
             data_loader = train_ld
+            desc = f"Epoch {epoch+1}/{epochs} [train]"
         elif mode == "valid":
             context_manager = torch.no_grad()
             model.eval()
             data_loader = valid_ld
+            desc = f"Epoch {epoch+1}/{epochs} [valid]"
         else:
             return 0.0, 0.0
 
         loss_sum, correct, total = 0.0, 0, 0
 
         with context_manager:
-            for x, y in data_loader:
+            pbar = tqdm(
+                data_loader,
+                desc=desc,
+                leave=False,           # keeps output clean
+                dynamic_ncols=True,
+            )
+
+            for x, y in pbar:
                 x = x.to(device, non_blocking=pin_memory)
                 y = y.to(device, non_blocking=pin_memory)
 
@@ -188,13 +199,8 @@ def main():
                 if mode == "train":
                     optimizer.zero_grad(set_to_none=True)
                     loss.backward()
-
-                    # optional stabilizer (uncomment if you see spiky loss)
-                    # torch.nn.utils.clip_grad_norm_(model.parameters(), 1.0)
-
                     optimizer.step()
                     if scheduler is not None:
-                        # per-step schedule
                         scheduler.step()
                     global_step += 1
 
@@ -204,7 +210,15 @@ def main():
                 correct += (preds == y).sum().item()
                 total += bs
 
+                # live stats
+                pbar.set_postfix(
+                    loss=f"{loss.item():.3f}",
+                    acc=f"{correct/total:.3f}",
+                    lr=f"{optimizer.param_groups[0]['lr']:.2e}" if mode == "train" else None,
+                )
+
         return (correct / total), (loss_sum / total)
+
 
     print(f"Host: {socket.gethostname()}", flush=True)
     print(f"SLURM_JOB_ID: {os.environ.get('SLURM_JOB_ID')}", flush=True)
@@ -214,8 +228,8 @@ def main():
 
     with ctx_mgr:
         for epoch in range(start_epoch, epochs):
-            train_acc, train_loss = do_epoch("train")
-            valid_acc, valid_loss = do_epoch("valid")
+            train_acc, train_loss = do_epoch("train", epoch)
+            valid_acc, valid_loss = do_epoch("valid", epoch)
 
             current_lr = optimizer.param_groups[0]["lr"]
             print(
