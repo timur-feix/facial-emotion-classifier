@@ -1,6 +1,6 @@
 #!/bin/bash
 #SBATCH --job-name=fer
-#SBATCH --partition=NvidiaAll
+#SBATCH --partition=Krater
 #SBATCH --time=00:20:00
 #SBATCH --cpus-per-task=4
 #SBATCH --output=%x_%j.out
