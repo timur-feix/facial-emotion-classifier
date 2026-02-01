@@ -5,8 +5,7 @@ from torch.utils.data import DataLoader
 
 from pathlib import Path
 
-using_debug = True
-
+# use debug flag for timed measurements & debug info
 def parse_args():
     p = argparse.ArgumentParser()
     p.add_argument("--data-dir", type=str, default=None)
@@ -16,6 +15,7 @@ def parse_args():
     p.add_argument("--lr", type=float, default=1e-3)
     p.add_argument("--num-workers", type=int, default=4)
     p.add_argument("--resume", type=str, default=None)
+    p.add_argument("--debug", type=bool, default=False)
     return p.parse_args()
 
 def save_ckpt(path, epoch, model, optimizer, best_valid_acc):
@@ -35,6 +35,7 @@ def load_ckpt(path, model, optimizer):
 
 def main():
     args = parse_args()
+    using_debug = args.debug
 
     root = Path(__file__).resolve().parents[1]
     default_data = root / "data" / "balanced-raf-db"
@@ -72,8 +73,6 @@ def main():
         lr=lr,
         weight_decay=1e-4
     )
-
-    if using_debug: print(f"Using optim: {optimizer}", flush=True)
 
     # maybe later: LR schedule
     # TODO
@@ -144,7 +143,9 @@ def main():
     print(f"Host: {socket.gethostname()}", flush=True)
     print(f"SLURM_JOB_ID: {os.environ.get('SLURM_JOB_ID')}", flush=True)
 
-    with utilities.Timer("All epochs:"):
+    ctx_mgr = utilities.Timer("All epochs") if using_debug else utilities.NullContext()
+
+    with ctx_mgr:
         for epoch in range(start_epoch, epochs):
             train_acc, train_loss = do_epoch("train")
             valid_acc, valid_loss = do_epoch("valid")

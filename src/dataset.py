@@ -7,8 +7,6 @@ from PIL import Image
 
 from torch.utils.data import Dataset
 
-import utilities
-
 
 INDEX_MAP = {"angry":0, "disgust":1, "fear":2, "happy":3, "sad":4, "surprise":5}
 
@@ -27,29 +25,21 @@ class RAFDataset(Dataset):
             self.samples.append(
                 (self.relative_pathname / row["filename"], self.index_map[label])
             )
-        
-        self.timing_supervisor = [0.0, 0.0]
-    
-    def reset_timing_supervisor(self):
-        self.timing_supervisor = [0.0, 0.0]
 
     def __getitem__(self, idx):
-        with utilities.Timer("full __getitem__", show=False) as t:
-            # implements getitem where each image is converted into a 64x64 "grey" RGB image
-            path, y = self.samples[idx]
-            with Image.open(path) as img:
-                img = img.convert("L").convert("RGB")
-                img = img.resize((64, 64), resample=Image.Resampling.BILINEAR)
-  
-            arr = np.asarray(img, dtype=np.float32) / 255.0
-            arr = np.transpose(arr, (2, 0, 1))
+        # implements getitem where each image is converted into a 64x64 "grey" RGB image
+        path, y = self.samples[idx]
+        with Image.open(path) as img:
+            img = img.convert("L").convert("RGB")
+            img = img.resize((64, 64), resample=Image.Resampling.BILINEAR)
 
-            x = torch.from_numpy(arr)
-            x = (x - 0.5) / 0.5
-            y = torch.tensor(y, dtype=torch.long)
+        arr = np.asarray(img, dtype=np.float32) / 255.0
+        arr = np.transpose(arr, (2, 0, 1))
 
-        self.timing_supervisor[0] += t.timer
-        self.timing_supervisor[1] += 1
+        x = torch.from_numpy(arr)
+        x = (x - 0.5) / 0.5
+        y = torch.tensor(y, dtype=torch.long)
+
         return x, y
     
     def __len__(self):
