@@ -3,7 +3,6 @@
 # Purpose : Script for defining the model architecture and training
 # Status : done - model trained and saved as emotion_model.pt
 
-
 import torch
 import torch.nn as nn
 from torchvision.models import resnet18
