@@ -68,7 +68,7 @@ class VideoDemo:
 
                 with torch.no_grad():
                     outputs = self.model(face_tensor)
-                    predicted = torch.argmax(outputs, 1).item(),
+                    predicted = torch.argmax(outputs, 1).item()
                     emotion_label = self.emotion_dict[predicted]
 
                 if self.enable_gradcam:
