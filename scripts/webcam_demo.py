@@ -14,7 +14,7 @@ class WebcamDemo:
     def __init__(self, model_weights='checkpoints/best.pt'):
         self.model, self.device = load_model(model_weights)
         self.model.eval()
-        self.emotion_dict = EMOTION_DICT
+        self.emotion_dict = {v: k for k, v in EMOTION_DICT.items()}
         self.gradcam_enabled = False
 
         # Initialize Face Recognition
@@ -25,11 +25,24 @@ class WebcamDemo:
     
     # prepare face for model input 
     def preprocess_face(self, frame):
-        face_gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
-        face_resized = cv2.resize(face_gray, (64, 64))
-        face_normalized = face_resized / 255.0
-        face_tensor = (torch.tensor(face_normalized, dtype=torch.float32)
-                       .unsqueeze(0).unsqueeze(0).to(self.device))  
+        # OpenCV gives BGR → convert to RGB
+        face_rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+        face_resized = cv2.resize(face_rgb, (64, 64))
+
+        # normalize to [0,1]
+        face_normalized = face_resized.astype("float32") / 255.0
+
+        # HWC → CHW → NCHW
+        face_tensor = (
+            torch.from_numpy(face_normalized)
+            .permute(2, 0, 1)   # [3,64,64]
+            .unsqueeze(0)       # [1,3,64,64]
+            .to(self.device)
+        )
+
+        # match training normalization
+        face_tensor = (face_tensor - 0.5) / 0.5
+
         return face_tensor
     
     # UI helper 
