@@ -153,9 +153,9 @@ class WebcamDemo:
 
 if __name__ == "__main__":
     print("Starting Webcam Emotion Recognition Demo...\n")
-    live_demo = WebcamDemo()
-    live_demo.run()
-    
     print("Controls:")
     print("Press 'g' -> to toggle Grad-CAM overlay.")
     print("Press 'q' -> to quit.")
+    
+    live_demo = WebcamDemo()
+    live_demo.run()
