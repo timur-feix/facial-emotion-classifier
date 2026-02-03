@@ -6,8 +6,6 @@
 
 # Using for now an already existing implementation of Grad-CAM, since this is allowed, to focus more on training the model on our dataset and adapting
 
-from scripts.emotion_model import ResNetEmotionModel, EMOTION_DICT
-
 import numpy as np
 import torch
 import matplotlib.pyplot as plt
@@ -20,6 +18,8 @@ import random
 from pytorch_grad_cam import GradCAM
 from pytorch_grad_cam.utils.model_targets import ClassifierOutputTarget
 from pytorch_grad_cam.utils.image import show_cam_on_image
+
+from scripts.emotion_model import ResNetEmotionModel, EMOTION_DICT
 
 
 # Load our pre-trained model
