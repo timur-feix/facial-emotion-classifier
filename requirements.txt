@@ -1,7 +1,10 @@
 numpy
 torch
+torchvision
 kagglehub
 pillow
 matplotlib
 pandas
-torchvision
+tqdm
+opencv-python
+git+https://github.com/jacobgil/pytorch-grad-cam
