@@ -135,12 +135,12 @@ class VideoDemo:
         print("Video processing completed.")
 
 if __name__ == "__main__":
-    video_path = Path('video.mov')
-    output_path = Path('video_with_emotion_gradcam.mp4')
+    video_path = Path('video_with6emotions.mp4') #video_with6emotions.mp4
+    output_path = Path('video_with_emotion.mp4')
       
     video_demo = VideoDemo(video_path=video_path,
                            model_weights='emotion_model.pt',
                            output_path=output_path,
-                           enable_gradcam=True,
+                           enable_gradcam=False,
                            window_seconds=1)
     video_demo.run()
