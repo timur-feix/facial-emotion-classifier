@@ -68,13 +68,13 @@ class VideoDemo:
 
                 with torch.no_grad():
                     outputs = self.model(face_tensor)
-                    _, predicted = torch.argmax(outputs, 1).item(),
+                    predicted = torch.argmax(outputs, 1).item(),
                     emotion_label = self.emotion_dict[predicted]
 
                 if self.enable_gradcam:
                     cam = compute_gradcam(self.model, face_tensor,
-                                              target_category=predicted,
-                                              device=self.device)
+                                              predicted,
+                                              self.device)
                     cam_resized = cv2.resize(cam, (x2 - x1, y2 - y1))
 
                     heatmapped = cv2.applyColorMap(np.uint8(255 * cam_resized),
