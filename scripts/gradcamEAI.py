@@ -55,7 +55,10 @@ def load_test_data():
     row = df.iloc[random.randrange(len(df))]
 
     image_path = test_path / row["filename"]
-    true_label = EMOTION_TO_IDX[row["label"]]
+    try:
+        true_label = EMOTION_DICT[row["label"]]
+    except KeyError:
+        print(f"EMOTION_DICT:{EMOTION_DICT}\nEMOTION_TO_IDX:{EMOTION_TO_IDX}")
     
     image_pil = Image.open(image_path).convert('L').convert('RGB')  # convert to grayscale
     
@@ -67,7 +70,7 @@ def load_test_data():
     ])
 
     image_tensor = transform(image_pil).unsqueeze(0)  # type: ignore
-    return image_pil, image_tensor, true_label
+    return image_pil, image_tensor, true_label # type: ignore
     
 
 #prediction pass
@@ -108,12 +111,12 @@ def visualize_results(image_pil, cam, true_label, predicted):
     plt.figure(figsize=(10,5))
 
     plt.subplot(1,3,1)
-    plt.title(f'Original Image - True: {EMOTION_DICT[true_label]}')
+    plt.title(f'Original Image - True: {EMOTION_TO_IDX[true_label]}')
     plt.imshow(img_np)
     plt.axis('off')
 
     plt.subplot(1,3,2)
-    plt.title(f'Grad-CAM - Predicted: {EMOTION_DICT[predicted]}')
+    plt.title(f'Grad-CAM - Predicted: {EMOTION_TO_IDX[predicted]}')
     plt.imshow(cam_image)
     plt.axis('off')
 
