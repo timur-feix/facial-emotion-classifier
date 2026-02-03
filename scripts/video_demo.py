@@ -9,16 +9,16 @@ import numpy as np
 from pathlib import Path
 from collections import Counter
 
-from scripts.emotion_model import ResNetEmotionModel, EMOTION_DICT
+from src.dataset import INDEX_MAP as EMOTION_DICT
 from scripts.gradcamEAI import load_model, compute_gradcam
 
 class VideoDemo:
-    def __init__(self, video_path, model_weights='emotion_model.pt',
+    def __init__(self, video_path, model_weights='checkpoints/best.pt',
                    output_path="output_with_gradcam.mp4", enable_gradcam=True,
                    window_seconds=1, confidence_threshold=0.5):
         self.model, self.device = load_model(model_weights)
         self.model.eval()
-        self.emotion_dict = EMOTION_DICT
+        self.emotion_dict = {v: k for k, v in EMOTION_DICT.items()}
 
         self.video_path = str(video_path)
         self.output_path = str(output_path)
@@ -32,9 +32,15 @@ class VideoDemo:
     def preprocess_face(self, face):
         face_gray = cv2.cvtColor(face, cv2.COLOR_BGR2GRAY)
         face_resized = cv2.resize(face_gray, (64, 64))
-        face_normalized = face_resized / 255.0
-        face_tensor = (torch.tensor(face_normalized, dtype=torch.float32)
-                       .unsqueeze(0).unsqueeze(0).to(self.device))  
+        face_normalized = face_resized.astype("float32") / 255.0
+
+        face_tensor = torch.from_numpy(face_normalized).unsqueeze(0).unsqueeze(0).to(self.device)
+        # [1,1,64,64] -> [1,3,64,64]
+        face_tensor = face_tensor.repeat(1, 3, 1, 1)
+
+        # if you trained with (x-0.5)/0.5
+        face_tensor = (face_tensor - 0.5) / 0.5
+
         return face_tensor
     
     def run(self):
@@ -135,12 +141,12 @@ class VideoDemo:
         print("Video processing completed.")
 
 if __name__ == "__main__":
-    video_path = Path('video_with6emotions.mp4') #video_with6emotions.mp4
-    output_path = Path('video_with_emotion.mp4')
+    video_path = Path('videos/video_with6emotions.mp4') #video_with6emotions.mp4
+    output_path = Path('videos/video_with_emotion.mp4')
       
     video_demo = VideoDemo(video_path=video_path,
-                           model_weights='emotion_model.pt',
+                           model_weights='checkpoints/best.pt',
                            output_path=output_path,
-                           enable_gradcam=False,
+                           enable_gradcam=True,
                            window_seconds=1)
     video_demo.run()

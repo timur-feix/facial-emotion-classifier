@@ -7,11 +7,11 @@ import time
 import torch 
 import numpy as np
 
-from scripts.emotion_model import EMOTION_DICT
+from src.dataset import INDEX_MAP as EMOTION_DICT
 from scripts.gradcamEAI import load_model, compute_gradcam
 
 class WebcamDemo:
-    def __init__(self, model_weights='emotion_model.pt'):
+    def __init__(self, model_weights='checkpoints/best.pt'):
         self.model, self.device = load_model(model_weights)
         self.model.eval()
         self.emotion_dict = EMOTION_DICT

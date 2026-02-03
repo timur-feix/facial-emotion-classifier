@@ -19,16 +19,26 @@ from pytorch_grad_cam import GradCAM
 from pytorch_grad_cam.utils.model_targets import ClassifierOutputTarget
 from pytorch_grad_cam.utils.image import show_cam_on_image
 
-from scripts.emotion_model import ResNetEmotionModel, EMOTION_DICT
+from src.model import FacialEmotionRecognitionCNN as FERCNN
+from src.dataset import INDEX_MAP as EMOTION_DICT
 
 
 # Load our pre-trained model
-def load_model(weights_path='emotion_model.pt'):
+def load_model(weights_path='checkpoints/best.pt'):
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     
-    model = ResNetEmotionModel(num_classes=len(EMOTION_DICT)) 
-    model.load_state_dict(torch.load(weights_path,
-                                          map_location=device))
+    model = FERCNN(n_classes=len(EMOTION_DICT))
+
+    ckpt = torch.load(weights_path, map_location=device)
+
+    # handle both "full checkpoint" and "pure state_dict" files
+    state_dict = ckpt["model"] if isinstance(ckpt, dict) and "model" in ckpt else ckpt
+
+    # if trained with DataParallel, strip "module." prefix
+    if any(k.startswith("module.") for k in state_dict.keys()):
+        state_dict = {k.replace("module.", "", 1): v for k, v in state_dict.items()}
+
+    model.load_state_dict(state_dict, strict=True)
     model.to(device)
     model.eval()
 
@@ -47,14 +57,16 @@ def load_test_data():
     image_path = test_path / row["filename"]
     true_label = EMOTION_TO_IDX[row["label"]]
     
-    image_pil = Image.open(image_path).convert('L')  # convert to grayscale
+    image_pil = Image.open(image_path).convert('L').convert('RGB')  # convert to grayscale
     
     transform = transforms.Compose([
-        transforms.Resize((64, 64)),
-        transforms.ToTensor(),
-        transforms.Normalize(mean=[0.5], std=[0.5])
+    transforms.Resize((64, 64)),
+    transforms.ToTensor(),
+    transforms.Normalize(mean=[0.5, 0.5, 0.5],
+                         std=[0.5, 0.5, 0.5]),
     ])
-    image_tensor = transform(image_pil).unsqueeze(0)  # add batch dimension
+
+    image_tensor = transform(image_pil).unsqueeze(0)  # type: ignore
     return image_pil, image_tensor, true_label
     
 
@@ -72,13 +84,13 @@ def get_prediction(model, image_tensor, device):
 def compute_gradcam(model, image_tensor, class_index, device):
     # ensuring the tensor is on the correct device
     image_tensor = image_tensor.to(device)
-    target_layers = [model.model.layer3[-1]] # target layer in the model bzw. last conv layer
+    target_layers = [model.stacks[6].conv] # target layer in the model bzw. last conv layer
     
     cam = GradCAM(model=model,
                   target_layers=target_layers)
     targets = [ClassifierOutputTarget(class_index)]
     grayscale_cam = cam(input_tensor=image_tensor,
-                         targets=targets)
+                         targets=targets) # type: ignore
     
     return grayscale_cam[0]
 
