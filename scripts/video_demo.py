@@ -1,104 +1,105 @@
-# Author : Neslihan Bir 
 # Branch : mays/mayss_contribution
 # Purpose: Demo script for video emotion recognition 
-
-from scripts.emotion_model import ResNetEmotionModel, EMOTION_DICT
+# Input : video file path
+# Output : video file with emotion labels and Grad-CAM overlay (if enabled)
 
 import cv2
 import torch
 import numpy as np
-from torchvision import transforms
+from pathlib import Path
 
-from pytorch_grad_cam import GradCAM
-from pytorch_grad_cam_utils.model_targets import ClassifierOutputTarget
-from pytorch_grad_cam.utils.image import show_cam_on_image
+from scripts.emotion_model import ResNetEmotionModel, EMOTION_DICT
+from scripts.gradcamEAI import load_model, compute_gradcam
 
+class VideoDemo:
+    def __init__(self, video_path, model_weights='emotion_model.pt',
+                   output_path="output_with_gradcam.mp4", enable_gradcam=True):
+        self.model, self.device = load_model(model_weights)
+        self.model.eval()
+        self.emotion_dict = EMOTION_DICT
 
-# Load pre-trained model
-def load_model (weigths_path="emotion_model.pt"):
-    device = torch.device("cuda" if torch.cuda.is_avaible() else "cpu")
+        self.video_path = str(video_path)
+        self.output_path = str(output_path)
+        self.enable_gradcam = enable_gradcam
 
-    model = ResNetEmotionModel(num_classes=len(EMOTION_DICT))
-    model.load_state_dict(torch.load(weigths_path, map_location=device))
-    model.to(device)
-    model.eval()
-
-    return model, device
-
-# Preprocessing transform
-
-transform = transforms.Compose([
-    transforms.ToPILImage(),
-    transforms.Resize((64, 64)),
-    transforms.Grayscale(),
-    transforms.ToTensor(),
-    transforms.Noramalize(mean=[0.5], std=[0.5])
-])
-
-# Video Demo
-
-def run_video_demo(video_path):
-
-    model, device = load_model()
-
-    # GradCam setup (same layer as before)
-    target_layers = [model.model.layer4[-1]]
-    cam = GradCAM(model=model, target_layers=target_layers)
-
-    cap = cv2.VideoCapture(video_path)
-
-    if not cap.isOpend():
-        print("Could not open video.")
-        return 
+        self.face_cascade = cv2.CascadeClassifier(
+            cv2.data.haarcascades + "haarcascade_frontalface_default.xml")
     
-    while True:
-        ret, frame = cap.read()
+    def preprocess_face(self, face_img):
+        face_gray = cv2.cvtColor(face_img, cv2.COLOR_BGR2GRAY)
+        face_resized = cv2.resize(face_gray, (64, 64))
+        face_normalized = face_resized / 255.0
+        face_tensor = (torch.tensor(face_normalized, dtype=torch.float32)
+                       .unsqueeze(0).unsqueeze(0).to(self.device))  
+        return face_tensor
+    
+    def run(self):
+        cap_video = cv2.VideoCapture(self.video_path)
 
-        if not ret:
-            break
-
-        # 1. Preprocess frame
-        frame_rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
-
-        image_tensor = transform(frame_rgb).unsquezze(0).to(device)
-
-        # 2. Prediction
-        with torch.no_grad():
-            output = model(image_tensor)
-            predicted = torch.argmax(output, 1).item()
-
-        # 3. GradCam
-        targets = [ClassifierOutputTarget(predicted)]
-        grayscale_cam = cam(input_tensor=image_tensor, targets = targets)[0]
-
-        # 4. Overlay heatmap on frame
-        frame.float = frame_rgb.astype(np.float32) / 255.0
-        cam_image = show_cam_on_image(frame_float, grayscale_cam, use_rgb=True)
-
-        # 5. Show result
-        emotion_text = EMOTION_DICT[predicted]
-
-        cv2.putText(
-            cam_image,
-            f"Emotion: {emotion_text}",
-            (20, 40),
-            cv2.FONT_HERSHEY_SIMPLEX,
-            1,
-            (255, 255, 255);
-            2
-        )
-
-        cam_image_bgr = cv2.cvtColor(cam_image, cv2.COLOR_RGB2BGR)
-        cv2.imshow("GradCAM Video Demo", cam_image_bgr)
-
-        #press q to quit 
-        if cv2.waitKey(1) & 0xFF == ord('q'):
-            break
-
+        if not cap_video.isOpened():
+            raise RuntimeError(f"Error: Could not open video source {self.video_path}.")
         
-    cap.release()
-    cv2.destroyAllWindows()
+        fps = cap_video.get(cv2.CAP_PROP_FPS)
+        width = int(cap_video.get(cv2.CAP_PROP_FRAME_WIDTH))
+        height = int(cap_video.get(cv2.CAP_PROP_FRAME_HEIGHT))
+        fourcc = cv2.VideoWriter_fourcc(*'mp4v')
+        out_video = cv2.VideoWriter(self.output_path, fourcc, fps, (width, height))
 
-#Start script
+        print(f"Processing video: {self.video_path}")
+        print(f"Output will be saved to {self.output_path}")
+
+        while True:
+            ret, frame = cap_video.read()
+            if not ret:
+                break
+
+            gray_frame = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+            faces = self.face_cascade.detectMultiScale(gray_frame, scaleFactor=1.1,
+                                                       minNeighbors=5, minSize=(30, 30))
+
+            for (x, y, w, h) in faces:
+                x1, y1 = max(x, 0), max(y, 0)
+                x2, y2 = min(x +w, width), min(y + h, height)
+                
+                face_img = frame[y1:y2, x1:x2]
+                if face_img.size == 0:
+                    continue
+                face_tensor = self.preprocess_face(face_img)
+
+                with torch.no_grad():
+                    outputs = self.model(face_tensor)
+                    _, predicted = torch.argmax(outputs, 1).item(),
+                    emotion_label = self.emotion_dict[predicted]
+
+                if self.enable_gradcam:
+                    cam = compute_gradcam(self.model, face_tensor,
+                                              target_category=predicted,
+                                              device=self.device)
+                    cam_resized = cv2.resize(cam, (x2 - x1, y2 - y1))
+
+                    heatmapped = cv2.applyColorMap(np.uint8(255 * cam_resized),
+                                                  cv2.COLORMAP_JET)
+                    
+                    frame[y1:y2, x1:x2] = cv2.addWeighted(frame[y1:y2, x1:x2], 0.5,
+                                                          heatmapped, 0.5, 0)
+
+                cv2.rectangle(frame, (x1, y1), (x2, y2), (44, 150, 104), 2)
+                cv2.putText(frame, emotion_label, (x1, y1-10),
+                            cv2.FONT_HERSHEY_SIMPLEX, 0.9, (255,255,255), 2)
+
+            out_video.write(frame)
+            
+        cap_video.release()
+        out_video.release()
+        cv2.destroyAllWindows()
+        print("Video processing completed.")
+
 if __name__ == "__main__":
-    run_video_demo("test")
+    video_path = Path('video.mov')
+    output_path = Path('video_with_emotion_gradcam.mp4')
+      
+    video_demo = VideoDemo(video_path=video_path,
+                           model_weights='emotion_model.pt',
+                           output_path=output_path,
+                           enable_gradcam=True)
+    video_demo.run()
