@@ -1,0 +1,9 @@
+{
+  "data_dir": null,
+  "outdir": "checkpoints",
+  "epochs": 7,
+  "batch_size": 64,
+  "lr": 0.001,
+  "num_workers": 0,
+  "resume": null
+}
