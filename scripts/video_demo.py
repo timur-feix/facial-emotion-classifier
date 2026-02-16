@@ -141,6 +141,6 @@ if __name__ == "__main__":
     video_demo = VideoDemo(video_path=video_path,
                            model_weights='emotion_model.pt',
                            output_path=output_path,
-                           enable_gradcam=False,
+                           enable_gradcam=True,
                            window_seconds=1)
     video_demo.run()

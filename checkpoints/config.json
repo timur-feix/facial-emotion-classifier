@@ -1,0 +1,13 @@
+{
+  "data_dir": null,
+  "outdir": "checkpoints",
+  "epochs": 10,
+  "batch_size": 64,
+  "lr": 0.001,
+  "num_workers": 4,
+  "resume": null,
+  "debug": false,
+  "sched": "cosine",
+  "warmup": 0.05,
+  "min_lr": 2e-05
+}
