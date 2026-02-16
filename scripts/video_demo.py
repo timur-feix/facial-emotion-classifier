@@ -141,7 +141,7 @@ class VideoDemo:
         print("Video processing completed.")
 
 if __name__ == "__main__":
-    video_path = Path('videos/video_with6emotions.mp4') #video_with6emotions.mp4
+    video_path = Path('videos/video_with6emotions.mp4') 
     output_path = Path('videos/video_with_emotion.mp4')
       
     video_demo = VideoDemo(video_path=video_path,
