@@ -198,4 +198,4 @@ class ResNetEmotionModel(nn.Module):
 
 if __name__ == "__main__":
     print(f"Total parameters: {sum([_.numel() for _ in ResNetEmotionModel().parameters()])}")
-    ResNetEmotionModel.training_model(epochs=6, batch_size=64, lr=1e-3)
+    ResNetEmotionModel.training_model(epochs=10, batch_size=64, lr=1e-3)
