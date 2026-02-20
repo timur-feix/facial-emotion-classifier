@@ -35,7 +35,7 @@ def main():
                         help="Folder containing images to classify",
                         dest="input_dir")
     parser.add_argument("--weights", type=str, default="checkpoints/best.pt",
-                        help="Folder containing images to classify")
+                        help="Model weights")
     parser.add_argument("--output-csv", type=str, default="predictions.csv",
                         help="Output CSV path (default: predictions.csv)",
                         dest="output_csv")

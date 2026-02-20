@@ -63,10 +63,11 @@ Run `scripts.data_utils.preprocessing_data`. It will flatten the structure of `t
 generate label cvs files for each split.
 
 
-## 3 Training
+## 3 Using the model
+### 3.1 Training
 Now, the world is your oyster. You can train the custom `FacialEmotionRecognitionCNN` by running `src.train`.
 
-Required arguments: None
+Required arguments: None.
 
 Optionial arguments:
 
@@ -91,3 +92,23 @@ Optionial arguments:
 `--warmup` - Warmup fraction of total steps (cosine), default is 0.05.
 
 `--min-lr` - Lowest learning rate for cosine decay, default is `2e-5`.
+
+### 3.2 Testing
+Test the model by running `src.eval`. It will run the test data through the model with `checkpoints\best.pt` as the weights.
+
+Arguments: None.
+
+### 3.3 Inference
+Run `src.inference` to generate a CSV file with the corresponding logits for each image in a directory.
+
+Required arguments:
+
+`--input-dir` - Path to the input directory with images to score.
+
+Optional arguments:
+
+`--weights` - Model weights, default is `~\checkpoints\best.pt`.
+
+`--output-csv` - Output CSV, default is `predictions.csv`.
+
+`--batch-size` - Batch size, default is 256.
