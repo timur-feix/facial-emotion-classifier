@@ -126,7 +126,7 @@ Required arguments:
 
 Optional arguments:
 
-``--output-dir` - Directory to store processed video, default is `~\videos`.
+``--output-dir`` - Directory to store processed video, default is `~\videos`.
 
 ``--weights`` - Weights to be loaded into model, default is `~\checkpoints\best.pt`.
 
