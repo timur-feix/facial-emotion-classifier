@@ -46,6 +46,8 @@ python src\inference.py --args...
 Run `scripts.data_utils.download_data` as a module inside the root folder.
 It will download data into `data\balanced-raf-db` directory with subdirs `train`, `val`, and `test`.
 
+Arguments: None.
+
 #### 2.1.1 Manual download
 Should the download script fail, you can download the dataset on [Kaggle](https://www.kaggle.com/datasets/dollyprajapati182/balanced-raf-db-dataset-7575-grayscale). Move the downloaded directories into `data\balanced-raf-db`.
 
@@ -59,9 +61,10 @@ data/
 ```
 
 ### 2.2 Preprocessing
-Run `scripts.data_utils.preprocessing_data`. It will flatten the structure of `train`, `test`, and `val` and 
+Run `scripts.data_utils.preprocess_data`. It will flatten the structure of `train`, `test`, and `val` and 
 generate label cvs files for each split.
 
+Arguments: None.
 
 ## 3 Using the model
 ### 3.1 Training
@@ -112,3 +115,19 @@ Optional arguments:
 `--output-csv` - Output CSV, default is `predictions.csv`.
 
 `--batch-size` - Batch size, default is 256.
+
+## 4 Demo
+### 4.1 Video Demo
+Run `scripts.video_demo` to generate a video with the model prediction overlay and the gradCAM - heatmap.
+
+By default, this will overlay the video in `videos\video_with6emotions.mp4` and save the output to `videos\video_with_emotion.mp4`.
+Consider changing `videos\video_with6emotions.mp4` to an MP4 file of your choice for further demonstration.
+
+Arguments: None.
+
+### 4.2 Webcam Demo
+To start the webcam demo, run `scripts.webcam_demo`. This will start a program overlaying the model predictions to your webcam feed.
+Press `G` on your keyboard to toggle the gradCAM - heatmap overlay on and off.
+Press `Q` to quit the program.
+
+Arguments: None.
