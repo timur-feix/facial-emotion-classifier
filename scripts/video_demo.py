@@ -158,7 +158,7 @@ if __name__ == "__main__":
                         dest="weights")
     
     parser.add_argument("--gradcam", action="store_true",
-                        help="Enable debug mode")
+                        help="Enable gradcam")
     
     args = parser.parse_args()
     video_path = Path(f'{args.input_file}') 
