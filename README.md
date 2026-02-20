@@ -75,3 +75,19 @@ Optionial arguments:
 `--out-dir` - Path to folder that saves checkpoints `best.pt`, `last.pt`, default is `~\checkpoints`.
 
 `--epochs` - Number of epochs, default is 10.
+
+`--batch-size` - Batch size, default is 64.
+
+`--lr` - Learning rate (start), default is `1e-3`.
+
+`--num-workers` - Workers for data loader, default is 4.
+
+`--resume` - Use to resume from a saved checkpoint, default is None.
+
+`--debug` - This flag prints a timer for each epoch, default is False.
+
+`--sched` - LR scheduler, default is cosine, choices are none, cosine, and onecycle.
+
+`--warmup` - Warmup fraction of total steps (cosine), default is 0.05.
+
+`--min-lr` - Lowest learning rate for cosine decay, default is `2e-5`.
