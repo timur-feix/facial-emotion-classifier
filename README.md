@@ -116,7 +116,7 @@ Optional arguments:
 
 `--batch-size` - Batch size, default is 256.
 
-Sample output:
+Sample output (csv):
 
 ```csv
 filename,score_angry,score_disgust,score_fear,score_happy,score_sad,score_surprise
