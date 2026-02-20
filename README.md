@@ -88,7 +88,7 @@ Optionial arguments:
 
 `--resume` - Use to resume from a saved checkpoint, default is None.
 
-`--debug` - This flag prints a timer for each epoch, default is False.
+`--debug` - (``action = "store_true"``) This flag prints a timer for each epoch, default is False.
 
 `--sched` - LR scheduler, default is cosine, choices are none, cosine, and onecycle.
 
@@ -120,10 +120,17 @@ Optional arguments:
 ### 4.1 Video Demo
 Run `scripts.video_demo` to generate a video with the model prediction overlay and the gradCAM - heatmap.
 
-By default, this will overlay the video in `videos\video_with6emotions.mp4` and save the output to `videos\video_with_emotion.mp4`.
-Consider changing `videos\video_with6emotions.mp4` to an MP4 file of your choice for further demonstration.
+Required arguments:
 
-Arguments: None.
+`--input-file` - File path of video to be processed.
+
+Optional arguments:
+
+``--output-dir` - Directory to store processed video, default is `~\videos`.
+
+``--weights`` - Weights to be loaded into model, default is `~\checkpoints\best.pt`.
+
+``--gradcam`` - (``action = "store_true"``) Render gradCAM - heatmap.
 
 ### 4.2 Webcam Demo
 To start the webcam demo, run `scripts.webcam_demo`. This will start a program overlaying the model predictions to your webcam feed.
