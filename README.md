@@ -186,6 +186,10 @@ Arguments: None.
 ### ResNet18-based experimental Model:
 If you want to view the ResNet18-based Model that we used during experiments you can access it in the scripts folder `scripts.ResNet18basedModel`. 
 
+### Accuracy results
+This table demonstrates the results which we got from the two main architictures that we trained.
+![alt text](image.png)
+
 
 ### Project structure
 ```
@@ -246,4 +250,3 @@ This folder is for the training and evaluation pipeline of the **custom model**.
 Contains the trained model weights and configuration used for the final experiments. 
 `best.pt` corresponds to the model achieving the highest validation accuracy, while `last.pt` stores the final training epoch.  
 The accompanying `config.json` file documents the hyperparameters and training setup used to obtain the reported results.
-
