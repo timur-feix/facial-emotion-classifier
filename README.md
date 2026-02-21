@@ -6,11 +6,11 @@ training CNNs from scratch to classify six facial emotions, visualizing model de
 In this Project, we developed a convolutional neural network (CNN)-based system and present a complete FER pipeline for six facial emotions trained from scratch (at $64\times64$ resolution) on a balanced version of the RAF-DB dataset.
 
 The complete Pipeline is built around three core compenents:
-1. Our (custom) CNN-based Model
-2. XAI: Utilizing and adapting Grad-CAM as our Explainable AI technique for visualizing the model's decision-making process.
-3. Demonstration: Real-time webcam and offline video processing scripts.
+1. **Our (custom) CNN-based Model**
+2. **XAI:** Utilizing and adapting Grad-CAM as our Explainable AI technique for visualizing the model's decision-making process.
+3. **Demonstration:** Real-time webcam and offline video processing scripts.
 
-As for performance: Our custom model achieved a test accuracy of 93.1%, outperforming our ResNet18 baseline in efficiency.
+As for performance: Our custom model achieved a **test accuracy of 93.1%**, outperforming our ResNet18 baseline in efficiency.
 
 This Repository walks you through our system.  
 
