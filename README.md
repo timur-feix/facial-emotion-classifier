@@ -183,3 +183,57 @@ The model is trained to classify the following emotions:
 - Happy
 - Sad 
 - Surprise
+
+### Project tructure
+```
+├── scripts
+│   ├──data_utils
+│        ├── download_data.py
+│        └── preprocess_data.py
+│   ├── __init__.py
+│   ├── ResNet18basedModel.py
+│   ├── gradcamEAI.py
+│   ├── video_demo.py
+│   └── webcam_demo.py
+├── slurm
+│   └── train.slurm
+├── src
+│   ├── __init__.py
+│   ├── confmat.py
+│   ├── dataset.py
+│   ├── eval.py
+│   ├── model.py
+│   ├── train.py
+│   └── utilities.py
+├── videos
+│   └──demo_video_raw.mp4
+│   └──processed_video.mp4
+```
+## Repository Overview
+### scripts/
+Scripts related to explainability, alternative architectures and demonstration pipelines.
+- `gradcamEAI.py` – The adapted Grad-CAM implementation for explainability
+- `video_demo.py` – Processes a video file and overlays predictions (+ heatmap).
+- `webcam_demo.py` – Real-time webcam inference demo.
+- `ResNet18basedModel.py` – Alternative architecture based on ResNet18 (experimental).
+- `data_utils/` - for Dataset loading,preparing the splits and generates `labels.csv` files required by the training pipeline.
+
+
+### src/
+This folder is for the training and evaluation pipeline of the **custom model**.
+- `dataset.py` – Implements the `RAFDataset` class.
+- `model.py` – Defines the `FacialEmotionRecognitionCNN` architecture used for the final experiments and reported results.
+- `train.py` – Training script for the custom CNN.
+- `eval.py` – Evaluation.
+- `utilities.py` – Helper utilities (e.g. Timer)
+- `confmat.py` – Computing confusion matrix for the test set.
+- `inference.py` – Runs inference on a folder of images and outputs classification logits to a CSV file (required by project specification).
+
+### videos/
+- `demo_video_raw.mp4` – Example input video used for the Video demo.
+- `processed_video.mp4` – Processed output video of the demo.
+
+### slurm/
+- `train.slurm` – Optional SLURM job script for HPC training (for the custom model).
+
+
