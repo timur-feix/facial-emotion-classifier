@@ -38,7 +38,8 @@ source .venv/bin/activate
 ```bash
 pip install -r requirements.txt
 ```
-
+**Note:** After installing the requirements, the first execution may take a moment to initialize. 
+This is because the system adapts a specialized Grad-CAM mplementation from an external repository to ensure high-quality visual explanations.
 
 ## 2. Downloading and preprocessing the data
 
