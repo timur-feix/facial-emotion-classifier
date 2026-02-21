@@ -10,6 +10,7 @@ The complete Pipeline is built around around three core compenents:
 3. Demonstration: Through an existing video and Webcam
 
 As for performance: Our custom model achieved a test accuracy of 93.1%, outperforming our ResNet18 baseline in efficiency.
+
 This Repository walks you through our system.  
 
 ## 1. Setting up the environment
