@@ -183,4 +183,3 @@ The model is trained to classify the following emotions:
 - Happy
 - Sad 
 - Surprise
-```
