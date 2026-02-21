@@ -167,6 +167,12 @@ Optional: If you want to make it easier for visualization you could use the Rain
 ### 4.1 Video Demo
 Run `scripts.video_demo` to generate a video with the model prediction overlay and the gradCAM - heatmap.
 
+
+Example:
+```bash
+python3 -m scripts.video_demo --input-file videos/demo_video_raw.mp4 --gradcam
+```
+
 Required arguments:
 
 `--input-file` - File path of video to be processed.
