@@ -182,16 +182,17 @@ Press `Q` to quit the program.
 Arguments: None.
 
 
-## Additional Notices:
-### ResNet18-based experimental Model:
+## Further Implementaion Information & Results
+### ResNet18-based Experimental Model:
+While our custom CNN is the primary focus, we also implemented a ResNet-18 based architecture for benchmarking.
 If you want to view the ResNet18-based Model that we used during experiments you can access it in the scripts folder `scripts.ResNet18basedModel`. 
 
-### Accuracy results
-This table demonstrates the results which we got from the two main architictures that we trained.
+### Model Performance Comparison
+This table summarizes the results obtained from our two primary architictures, that we trained.
 ![alt text](image.png)
 
 
-### Project structure
+### Repository Structure & Overview
 ```
 ├── checkpoints
 │   ├── best.pt
