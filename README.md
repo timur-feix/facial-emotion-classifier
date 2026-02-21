@@ -170,7 +170,7 @@ Press `Q` to quit the program.
 
 Arguments: None.
 
-```markdown
+
 ## Additional Notices:
 ### ResNet18-based experimental Model:
 If you want to view the ResNet18-based Model that we used during experiments you can access it in the scripts folder `scripts.ResNet18basedModel`. 
