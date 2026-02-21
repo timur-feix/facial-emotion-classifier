@@ -1,6 +1,6 @@
-import dataset, utilities, torch, os, argparse, json, socket, math
+import src.dataset as dataset, src.utilities as utilities, torch, os, argparse, json, socket, math
 
-from model import FacialEmotionRecognitionCNN as FERCNN
+from src.model import FacialEmotionRecognitionCNN as FERCNN
 from torch.utils.data import DataLoader
 
 from pathlib import Path

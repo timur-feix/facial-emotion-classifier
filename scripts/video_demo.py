@@ -12,6 +12,8 @@ from collections import Counter
 from src.dataset import INDEX_MAP as EMOTION_DICT
 from scripts.gradcamEAI import load_model, compute_gradcam
 
+from argparse import ArgumentParser
+
 class VideoDemo:
     def __init__(self, video_path, model_weights='checkpoints/best.pt',
                    output_path="output_with_gradcam.mp4", enable_gradcam=True,
@@ -47,6 +49,7 @@ class VideoDemo:
         cap_video = cv2.VideoCapture(self.video_path)
 
         if not cap_video.isOpened():
+            print(self.video_path)
             raise RuntimeError(f"Error: Could not open video source {self.video_path}.")
         
         fps = int(cap_video.get(cv2.CAP_PROP_FPS))
@@ -141,12 +144,29 @@ class VideoDemo:
         print("Video processing completed.")
 
 if __name__ == "__main__":
-    video_path = Path('videos/video_with6emotions.mp4') 
-    output_path = Path('videos/video_with_emotion.mp4')
+    parser = ArgumentParser()
+    parser.add_argument("--input-file", type=str, required=True,
+                        help="Video file to overlay predictions",
+                        dest="input_file")
+    
+    parser.add_argument("--output-dir", type=str, default="videos/",
+                        help="Directory to output video with overlay",
+                        dest="output_dir")
+    
+    parser.add_argument("--weights", type=str, default="checkpoints/best.pt",
+                        help="Model weights",
+                        dest="weights")
+    
+    parser.add_argument("--gradcam", action="store_true",
+                        help="Enable gradcam")
+    
+    args = parser.parse_args()
+    video_path = Path(f'{args.input_file}') 
+    output_path = Path(f'{args.output_dir}/processed_video.mp4')
       
     video_demo = VideoDemo(video_path=video_path,
-                           model_weights='checkpoints/best.pt',
+                           model_weights=args.weights,
                            output_path=output_path,
-                           enable_gradcam=True,
+                           enable_gradcam=args.gradcam,
                            window_seconds=1)
     video_demo.run()

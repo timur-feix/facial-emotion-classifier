@@ -3,8 +3,8 @@ from torch.utils.data import DataLoader
 from pathlib import Path
 from tqdm import tqdm
 
-import dataset
-from model import FacialEmotionRecognitionCNN as FERCNN
+import src.dataset as dataset
+from src.model import FacialEmotionRecognitionCNN as FERCNN
 
 
 @torch.no_grad()
