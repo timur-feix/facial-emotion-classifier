@@ -80,9 +80,10 @@ generate label cvs files for each split.
 
 Arguments: None.
 
-## 3 Using the model
+## 3 Using the custom model
 ### 3.1 Training
 Now, the world is your oyster. You can train the custom `FacialEmotionRecognitionCNN` by running `src.train`.
+
 
 Example: 
 ```bash
@@ -169,6 +170,7 @@ Press `Q` to quit the program.
 
 Arguments: None.
 
+```markdown
 ## Additional Notices:
 ### ResNet18-based experimental Model:
 If you want to view the ResNet18-based Model that we used during experiments you can access it in the scripts folder `scripts.ResNet18basedModel`. 
@@ -181,3 +183,4 @@ The model is trained to classify the following emotions:
 - Happy
 - Sad 
 - Surprise
+```
