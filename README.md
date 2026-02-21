@@ -135,6 +135,11 @@ Arguments: None.
 ### 3.3 Inference
 Run `src.inference` to generate a CSV file with the corresponding logits for each image in a directory.
 
+Example:
+```bash
+python3 -m src.inference --input-dir data/balanced-raf-db/test
+```
+
 Required arguments:
 
 `--input-dir` - Path to the input directory with images to score.
@@ -157,7 +162,7 @@ angry_101_aug_270552.png,0.12069202959537506,0.8788914680480957,2.01935545192100
 angry_102_aug_270752.png,0.9874639511108398,0.01139733474701643,2.0462763131945394e-05,0.0010925940005108714,9.065530548468814e-07,2.4632154236314818e-05
 angry_103_aug_271541.png,0.9827194213867188,0.008625814691185951,5.331341981218429e-07,0.007889540866017342,0.0007384480559267104,2.6252009774907492e-05
 ```
-
+Optional: If you want to make it easier for visualization you could use the Rainbow CSV extention in VS-Code.
 ## 4 Demo
 ### 4.1 Video Demo
 Run `scripts.video_demo` to generate a video with the model prediction overlay and the gradCAM - heatmap.
