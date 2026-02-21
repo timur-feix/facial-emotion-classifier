@@ -5,6 +5,15 @@ training CNNs from scratch to classify six facial emotions, visualizing model de
 # About the project
 In this Project, we developed a convolutional neural network (CNN)-based system and present a complete Facial Emotion Recognition (FER) pipeline for six facial emotions trained from scratch (at $64\times64$ resolution) on a balanced version of the RAF-DB dataset.
 
+The model is trained to classify the following emotions:
+
+- Angry
+- Disgust
+- Fear
+- Happy
+- Sad 
+- Surprise
+
 The Pipeline is built around three core components:
 1. **Our (custom) CNN-based Model**
 2. **XAI:** Utilizing and adapting Grad-CAM as our Explainable AI technique for visualizing the model's decision-making process.
@@ -174,15 +183,7 @@ Arguments: None.
 ## Additional Notices:
 ### ResNet18-based experimental Model:
 If you want to view the ResNet18-based Model that we used during experiments you can access it in the scripts folder `scripts.ResNet18basedModel`. 
-### The six emotions
-The model is trained to classify the following emotions:
 
-- Angry
-- Disgust
-- Fear
-- Happy
-- Sad 
-- Surprise
 
 ### Project tructure
 ```
