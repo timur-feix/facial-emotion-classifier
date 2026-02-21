@@ -3,7 +3,7 @@ Emotion Recognition Project for CVDL:
 training CNNs from scratch to classify six facial emotions, visualizing model decisions with Explainable AI (Grad-CAM), and building a video/webcam demo pipeline.
 
 # About the project
-In this Project, we developed a convolutional neural network (CNN)-based system and present a complete FER pipeline for six facial emotions trained from scratch on a balanced version of the RAF-DB dataset at $64\times64$ resolution.
+In this Project, we developed a convolutional neural network (CNN)-based system and present a complete FER pipeline for six facial emotions trained from scratch (at $64\times64$ resolution) on a balanced version of the RAF-DB dataset.
 The complete Pipeline is built around around three core compenents:
 1. Our (custom) CNN-based Model
 2. XAI: Utilizing and adapting Grad-CAM as our Explainable AI technique for visualizing the model's decision-making process.
