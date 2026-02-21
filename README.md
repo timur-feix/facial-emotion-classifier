@@ -38,8 +38,8 @@ source .venv/bin/activate
 ```bash
 pip install -r requirements.txt
 ```
-**Note:** After installing the requirements, the first execution may take a moment to initialize. 
-This is because the system adapts a specialized Grad-CAM mplementation from an external repository to ensure high-quality visual explanations.
+**Note:** Upon installing the requirements, the first execution may take a few minutes to initialize. 
+This is because the system adapts a specialized Grad-CAM implementation from an external repository to ensure high-quality visual explanations.
 
 ## 2. Downloading and preprocessing the data
 
@@ -83,6 +83,11 @@ Arguments: None.
 ## 3 Using the model
 ### 3.1 Training
 Now, the world is your oyster. You can train the custom `FacialEmotionRecognitionCNN` by running `src.train`.
+
+Example: 
+```bash
+python3 -m src.train
+```
 
 Required arguments: None.
 
@@ -163,3 +168,16 @@ Press `G` on your keyboard to toggle the gradCAM - heatmap overlay on and off.
 Press `Q` to quit the program.
 
 Arguments: None.
+
+## Additional Notices:
+### ResNet18-based experimental Model:
+If you want to view the ResNet18-based Model that we used during experiments you can access it in the scripts folder `scripts.ResNet18basedModel`. 
+### The six emotions
+The model is trained to classify the following emotions:
+
+- Angry
+- Disgust
+- Fear
+- Happy
+- Sad 
+- Surprise
