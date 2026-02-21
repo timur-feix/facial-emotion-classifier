@@ -267,3 +267,13 @@ This folder is for the training and evaluation pipeline of the **custom model**.
 Contains the trained model weights and configuration used for the final experiments. 
 `best.pt` corresponds to the model achieving the highest validation accuracy, while `last.pt` stores the final training epoch.  
 The accompanying `config.json` file documents the hyperparameters and training setup used to obtain the reported results.
+
+
+**Note:** If you want to test the codes in our repository you might need to open a test folder on your laptop and clone our Repo.
+
+Example:
+```bash
+git clone https://github.com/timur-feix/facial-emotion-classifier.git
+cd cd facial-emotion-classifier
+```
+and then start setting up the environment as mentioned above.
