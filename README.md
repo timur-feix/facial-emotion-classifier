@@ -192,7 +192,7 @@ This table summarizes the results obtained from our two primary architictures, t
 ![alt text](image.png)
 
 
-### Repository Structure & Overview
+## Repository Structure & Overview
 ```
 ├── checkpoints
 │   ├── best.pt
@@ -220,7 +220,7 @@ This table summarizes the results obtained from our two primary architictures, t
 │   └──demo_video_raw.mp4
 │   └──processed_video.mp4
 ```
-## Repository Overview
+
 ### scripts/
 Scripts related to explainability, alternative architectures and demonstration pipelines.
 - `gradcamEAI.py` – The adapted Grad-CAM implementation for explainability
