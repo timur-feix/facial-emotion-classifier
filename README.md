@@ -198,6 +198,11 @@ Arguments: None.
 While our custom CNN is the primary focus, we also implemented a ResNet-18 based architecture for benchmarking.
 If you want to view the ResNet18-based Model that we used during experiments you can access it in the scripts folder `scripts.ResNet18basedModel`. 
 
+Example:
+```bash
+python3 -m scripts.ResNet18basedModel
+```
+
 ### Model Performance Comparison
 This table summarizes the results obtained from our two primary architictures, that we trained. 
 ![alt text](ModelPerformanceComparison.png)
