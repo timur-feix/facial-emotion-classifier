@@ -5,7 +5,7 @@ training CNNs from scratch to classify six facial emotions, visualizing model de
 # About the project
 In this Project, we developed a convolutional neural network (CNN)-based system and present a complete Facial Emotion Recognition (FER) pipeline for six facial emotions trained from scratch (at $64\times64$ resolution) on a balanced version of the RAF-DB dataset.
 
-The model is trained to classify the following emotions:
+The model classifies the following emotions:
 
 - Angry
 - Disgust
@@ -19,9 +19,11 @@ The Pipeline is built around three core components:
 2. **XAI:** Utilizing and adapting Grad-CAM as our Explainable AI technique for visualizing the model's decision-making process.
 3. **Demonstration:** Real-time webcam and offline video processing scripts.
 
-As for performance: Our custom model achieved a **test accuracy of 93.1%**, outperforming our ResNet18 baseline in efficiency.
+All models are trained from scratch without pretrained weights, as required by the project specification.
 
-This Repository walks you through our system.  
+As for performance: Our final custom model achieved a **test accuracy of 93.1%**, outperforming our ResNet18 baseline in efficiency.
+
+This repository accompanies the final project submission for the CVDL course and provides a complete implementaion of the system described in the final report.
 
 ## 1. Setting up the environment
 Follow these steps to set up the virtual environment and install all required dependencies.
@@ -52,7 +54,7 @@ This is because the system adapts a specialized Grad-CAM implementation from an 
 
 ## 2. Downloading and preprocessing the data
 
-Important: All scripts in this repo are intended to be ran as modules, not as standalone scripts.
+Important: All scripts in this repo are intended to be run as modules, not as standalone scripts.
 
 Correct:
 ```sh
@@ -85,13 +87,13 @@ data/
 
 ### 2.2 Preprocessing
 Run `scripts.data_utils.preprocess_data`. It will flatten the structure of `train`, `test`, and `val` and 
-generate label cvs files for each split.
+generate label CSV files for each split.
 
 Arguments: None.
 
 ## 3 Using the custom model
 ### 3.1 Training
-Now, the world is your oyster. You can train the custom `FacialEmotionRecognitionCNN` by running `src.train`.
+The custom `FacialEmotionRecognitionCNN` can be trained by running `src.train`.
 
 
 Example: 
@@ -101,7 +103,7 @@ python3 -m src.train
 
 Required arguments: None.
 
-Optionial arguments:
+Optional arguments:
 
 `--data-dir` - Path to data folder, default is `~\data\balanced-raf-db`.
 
@@ -185,17 +187,20 @@ Arguments: None.
 If you want to view the ResNet18-based Model that we used during experiments you can access it in the scripts folder `scripts.ResNet18basedModel`. 
 
 
-### Project tructure
+### Project structure
 ```
+├── checkpoints
+│   ├── best.pt
+│   └── last.pt
 ├── scripts
-│   ├──data_utils
-│        ├── download_data.py
-│        └── preprocess_data.py
 │   ├── __init__.py
 │   ├── ResNet18basedModel.py
 │   ├── gradcamEAI.py
 │   ├── video_demo.py
-│   └── webcam_demo.py
+│   ├── webcam_demo.py
+│   └──data_utils
+│        ├── download_data.py
+│        └── preprocess_data.py
 ├── slurm
 │   └── train.slurm
 ├── src
@@ -217,7 +222,7 @@ Scripts related to explainability, alternative architectures and demonstration p
 - `video_demo.py` – Processes a video file and overlays predictions (+ heatmap).
 - `webcam_demo.py` – Real-time webcam inference demo.
 - `ResNet18basedModel.py` – Alternative architecture based on ResNet18 (experimental).
-- `data_utils/` - for Dataset loading,preparing the splits and generates `labels.csv` files required by the training pipeline.
+- `data_utils/` - for Dataset loading, preparing the splits and generates `labels.csv` files required by the training pipeline.
 
 
 ### src/
@@ -225,7 +230,7 @@ This folder is for the training and evaluation pipeline of the **custom model**.
 - `dataset.py` – Implements the `RAFDataset` class.
 - `model.py` – Defines the `FacialEmotionRecognitionCNN` architecture used for the final experiments and reported results.
 - `train.py` – Training script for the custom CNN.
-- `eval.py` – Evaluation.
+- `eval.py` – Evaluation on the test set.
 - `utilities.py` – Helper utilities (e.g. Timer)
 - `confmat.py` – Computing confusion matrix for the test set.
 - `inference.py` – Runs inference on a folder of images and outputs classification logits to a CSV file (required by project specification).
@@ -237,4 +242,8 @@ This folder is for the training and evaluation pipeline of the **custom model**.
 ### slurm/
 - `train.slurm` – Optional SLURM job script for HPC training (for the custom model).
 
+### checkpoints/
+Contains the trained model weights and configuration used for the final experiments. 
+`best.pt` corresponds to the model achieving the highest validation accuracy, while `last.pt` stores the final training epoch.  
+The accompanying `config.json` file documents the hyperparameters and training setup used to obtain the reported results.
 
